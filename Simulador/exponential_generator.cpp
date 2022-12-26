@@ -32,7 +32,7 @@ class ExponentialGenerator {
 	}
 
 	double get_random_value() {
-		return distribution(random_engine);
+		return this->distribution(this->random_engine);
 	}
 
 	unsigned int get_current_seed() {
