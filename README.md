@@ -1,0 +1,1 @@
+# Simulador de Filas - Avaliação e Desempenho 2022.2
