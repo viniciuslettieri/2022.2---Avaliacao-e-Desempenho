@@ -1,26 +1,49 @@
 #include <vector>
+#include <sstream>
 #include "queue_system.cpp"
 
 using namespace std;
 
-int main(){
-	QueueSystem queue_system;
+int main(int argc, char* argv[]){
+	if(argc-1 != 4) {
+		printf("Foram passados %d argumentos pelo cmd.\n", argc-1);
+		printf("Esperado [total clientes: int] [modo debug: bool] [arrival seed: int] [service seed: int]\n");
+		return 1;
+	}
+
+	// Interpretacao dos argumentos de linha
+	int clients = atoi(argv[1]);
+	bool debug = atoi(argv[2]);
+	unsigned int arrival_seed;
+	unsigned int service_seed;
+
+	std::stringstream ss;
+	ss << argv[3];
+	ss >> arrival_seed;
+	ss << argv[4];
+	ss >> service_seed;
+
+	QueueSystem queue_system(debug);
 
 	long double last_arrival = 0.0;
 
 	// sera retirado - deixa determinada a aleatoriedade
 	// arrival_generator.set_deterministic_seed(100000);	// possui prioridade
 	// arrival_generator.set_deterministic_seed(1);	// possui retry
-	arrival_generator.set_deterministic_seed(1);	// sequencia longa
-	service_generator.set_deterministic_seed(1);	
-
-
-	int t = 200;
-	while(t--) {
-		if(queue_system.queue1.size() <= 1){
+	
+	if(arrival_seed != -1)
+		arrival_generator.set_deterministic_seed(arrival_seed);
+	
+	if(service_seed != -1)
+		service_generator.set_deterministic_seed(service_seed);	
+	
+	long long int total_arrivals = 0;
+	while(queue_system.finalized.size() < clients) {
+		if(queue_system.queue1.size() <= 1 && total_arrivals <= clients){
 			Event next_event = generate_arrival(last_arrival);
 			queue_system.add_queue1(next_event);
 			last_arrival = next_event.tm_arrival;
+			total_arrivals++;
 		}
 
 		queue_system.execute();
