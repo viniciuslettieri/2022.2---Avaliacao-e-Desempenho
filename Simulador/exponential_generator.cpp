@@ -4,13 +4,13 @@ class ExponentialGenerator {
 
 	private:
 
-	double lambda;
+	long double lambda;
 	unsigned int seed;
 	std::mt19937 random_engine;
-	std::exponential_distribution<double> distribution;
+	std::exponential_distribution<long double> distribution;
 
-	void set_distribution_properties(double lambda) {
-		this->distribution = std::exponential_distribution<double>(lambda);
+	void set_distribution_properties(long double lambda) {
+		this->distribution = std::exponential_distribution<long double>(lambda);
 	}
 
 	void set_random_seed() {
@@ -21,7 +21,7 @@ class ExponentialGenerator {
 
 	public:
 
-	ExponentialGenerator(double lambda) {
+	ExponentialGenerator(long double lambda) {
 		this->lambda = lambda;
 		this->set_distribution_properties(lambda);
 		this->set_random_seed();
@@ -31,7 +31,7 @@ class ExponentialGenerator {
 		this->random_engine = std::mt19937(seed);
 	}
 
-	double get_random_value() {
+	long double get_random_value() {
 		return this->distribution(this->random_engine);
 	}
 

@@ -13,38 +13,38 @@ void validar_seed_aleatoria(int n) {
     }
 }
 
-void validar_geracao_numeros(int n, double lambda) {
+void validar_geracao_numeros(int n, long double lambda) {
     printf("\n= Validacao de Geracao Numeros Aleatorios =\n");
 
     std::random_device rd;
     std::mt19937 random_engine(rd());
-    std::exponential_distribution<double> dist(lambda);
+    std::exponential_distribution<long double> dist(lambda);
 
     for(int i=0; i<n; i++){
         printf("Seed Gerada: %f\n", dist(random_engine));
     }
 }
 
-void validar_geracao_exponencial(int n, double lambda){
+void validar_geracao_exponencial(int n, long double lambda){
     ExponentialGenerator number_generator = ExponentialGenerator(lambda);
-    vector<double> valores_gerados;
+    vector<long double> valores_gerados;
     
     for(int i=0; i<n; i++){
-        double v = number_generator.get_random_value();
+        long double v = number_generator.get_random_value();
         valores_gerados.push_back(v);
     }
 
-    double media = 0.0;
+    long double media = 0.0;
     for(auto v: valores_gerados) media += v;
     media /= valores_gerados.size();
     
-    double media_esperada = 1.0 / lambda;
+    long double media_esperada = 1.0 / lambda;
 
-    double variancia = 0.0;
+    long double variancia = 0.0;
     for(auto v: valores_gerados) variancia += pow(v - media, 2);
     variancia /= valores_gerados.size();
 
-    double variancia_esperada = 1.0 / pow(lambda, 2);
+    long double variancia_esperada = 1.0 / pow(lambda, 2);
 
     printf("\n= Validacao de Geracao Numeros Aleatorios =\n");
     printf("Quantidade de exemplos: %d\n", n);
