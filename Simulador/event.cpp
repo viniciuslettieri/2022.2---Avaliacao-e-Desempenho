@@ -27,13 +27,7 @@ typedef struct {
 	long double tm_end_service2 = -1;                // finish time for service 2
 } Event;
 
-double rho = 0.5;
-double lambda = rho / 2.0;
-ExponentialGenerator arrival_generator(lambda);
-
-ExponentialGenerator service_generator(1.0);
-
-Event generate_arrival(long double current_time) {
+Event generate_arrival(long double current_time, ExponentialGenerator arrival_generator, ExponentialGenerator service_generator) {
     Event event;
     event.tm_arrival = current_time + arrival_generator.get_random_value();
     event.tm_service1 = service_generator.get_random_value();

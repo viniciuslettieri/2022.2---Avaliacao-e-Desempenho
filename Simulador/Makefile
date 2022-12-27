@@ -4,7 +4,11 @@ testeIndividual:
 
 testePrioridade:
 	g++ -o simulador.o simulador.cpp
-	./simulador.o 5 0 100000 100000 > ../Simulacoes/teste_prioridade.csv
+	./simulador.o 3 0 100000 100000 > ../Simulacoes/teste_prioridade.csv
+
+testeRetry:
+	g++ -o simulador.o simulador.cpp
+	./simulador.o 6 0 1 7 > ../Simulacoes/teste_retry.csv
 
 testeLongo:
 	g++ -o simulador.o simulador.cpp
