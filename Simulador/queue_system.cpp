@@ -86,8 +86,9 @@ class QueueSystem {
         if(this->queue1.size() > 0 && this->queue1.front().tm_arrival <= this->global_time + remaining_service) {
             long double next_arrival = this->queue1.front().tm_arrival;
 
-            printf("[next %Lf | accum %Lf | remaining %Lf | global %Lf | active %Lf]", 
-                next_arrival, event.tm_accumulated_service2, remaining_service, this->global_time, next_arrival - this->global_time);
+            if(this->debug)
+                printf("[next %Lf | accum %Lf | remaining %Lf | global %Lf | active %Lf]", 
+                    next_arrival, event.tm_accumulated_service2, remaining_service, this->global_time, next_arrival - this->global_time);
             
             long double active_time = next_arrival - this->global_time;
             event.tm_accumulated_service2 += active_time;
@@ -99,8 +100,9 @@ class QueueSystem {
         
         // Se a proxima chegada na fila 1 nao interrompe o servico atual
         } else {
-            printf("[accum %Lf | remaining %Lf | global %Lf]", 
-                event.tm_accumulated_service2, remaining_service, this->global_time);
+            if(this->debug)
+                printf("[accum %Lf | remaining %Lf | global %Lf]", 
+                    event.tm_accumulated_service2, remaining_service, this->global_time);
 
             event.tm_accumulated_service2 = event.tm_service2;
             event.tm_end_service2 = this->global_time + remaining_service;
@@ -144,11 +146,11 @@ class QueueSystem {
             if(this->debug) printf("\n(gt %Lf)\n", this->global_time);
         }
 
-        if(this->debug) {
-            for(auto fin : this->finalized) {
-                printf("%lld: %Lf\n", fin.identifier, fin.tm_end_service2);
-            }
-        }
+        // if(this->debug) {
+        //     for(auto fin : this->finalized) {
+        //         printf("%lld: %Lf\n", fin.identifier, fin.tm_end_service2);
+        //     }
+        // }
     }
 
     long double get_global_time() {

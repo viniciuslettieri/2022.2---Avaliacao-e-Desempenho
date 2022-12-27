@@ -24,7 +24,8 @@ int main(int argc, char* argv[]){
 	ss << argv[4];
 	ss >> service_seed;
 
-	double rho = strtod(argv[2]);
+	char *ptr;
+	double rho = strtod(argv[5], &ptr);
 
 	if(debug) {
 		printf("\n[Raw Arguents: clients %s, debug %s, arrival_seed %s, service_seed %s]\n", argv[1], argv[2], argv[3], argv[4]);
@@ -45,10 +46,11 @@ int main(int argc, char* argv[]){
 	if(service_seed != -1)
 		service_generator.set_deterministic_seed(service_seed);	
 	
+	// Executamos o simulador ate que todos os clientes tenham sido criados e finalizados
 	long long int total_arrivals = 0;
 	while(queue_system.finalized.size() < clients) {
 		if(queue_system.queue1.size() <= 1 && total_arrivals <= clients){
-			Event next_event = generate_arrival(last_arrival, arrival_generator);
+			Event next_event = generate_arrival(last_arrival, arrival_generator, service_generator);
 			queue_system.add_queue1(next_event);
 			last_arrival = next_event.tm_arrival;
 			total_arrivals++;

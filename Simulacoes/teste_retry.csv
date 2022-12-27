@@ -1,4 +1,4 @@
-[accum 0.000000 | remaining 0.384152 | global 23.748815][accum 0.000000 | remaining 0.608043 | global 38.471895][accum 0.000000 | remaining 0.306350 | global 39.079938][accum 0.000000 | remaining 0.543645 | global 62.712441][accum 0.000000 | remaining 0.750278 | global 63.714957][accum 0.000000 | remaining 0.401731 | global 68.249666]identifier,tm_arrival,tm_service1,tm_service2,tm_arrival_queue1,tm_start_service1,tm_end_service1,tm_arrival_queue2,tm_start_service2,tm_end_service2
+identifier,tm_arrival,tm_service1,tm_service2,tm_arrival_queue1,tm_start_service1,tm_end_service1,tm_arrival_queue2,tm_start_service2,tm_end_service2
 1, 23.490900, 0.257915, 0.384152, 23.490900, 23.490900, 23.748815, 23.748815, 23.748815, 24.132967
 2, 34.276811, 3.826896, 0.608043, 34.276811, 34.276811, 38.103707, 38.103707, 38.471895, 39.079938
 3, 34.825245, 0.368188, 0.306350, 34.825245, 38.103707, 38.471895, 38.471895, 39.079938, 39.386288
