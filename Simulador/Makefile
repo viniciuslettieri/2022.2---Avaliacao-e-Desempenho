@@ -20,4 +20,8 @@ testeDebug:
 
 testeDebugAleatorio:
 	g++ -o simulador.o simulador.cpp
-	./simulador.o 1000 1 -1 -1 0.5
+	./simulador.o 50 0 -1 -1 0.5 > ../Simulacoes/debug_aleatorio.csv
+
+testeDebugAleatorio:
+	g++ -o simulador.o simulador.cpp
+	./simulador.o 50 0 -1 -1 0.5 > ../Simulacoes/debug_aleatorio.csv
