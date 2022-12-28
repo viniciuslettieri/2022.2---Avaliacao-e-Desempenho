@@ -1,14 +1,14 @@
 #include <deque>
 #include <vector>
-#include "event.cpp"
+#include "client.cpp"
 
 class QueueSystem {
 
 	public:
 
-    std::deque<Event> queue1, queue2;       // back = end | front = start
+    std::deque<Client> queue1, queue2;       // back = end | front = start
     long double global_time;
-    std::vector<Event> finalized;
+    std::vector<Client> finalized;
 
     bool debug;
 
@@ -17,70 +17,70 @@ class QueueSystem {
         this->debug = debug;
 	}
 
-    void add_queue1(Event event) {
-        event.state = st_queue1;
-        event.tm_arrival_queue1 = event.tm_arrival;
-        this->queue1.push_back(event);
+    void add_queue1(Client client) {
+        client.state = st_queue1;
+        client.tm_arrival_queue1 = client.tm_arrival;
+        this->queue1.push_back(client);
 
-        if(this->debug) printf("Event %lld added to Queue 1 at %Lf.\n", event.identifier, event.tm_arrival_queue1);
+        if(this->debug) printf("Client %lld added to Queue 1 at %Lf.\n", client.identifier, client.tm_arrival_queue1);
     }
 
-    void add_queue2(Event event) {
-        event.state = st_queue2;
-        event.tm_arrival_queue2 = this->global_time;
-        this->queue2.push_back(event);
+    void add_queue2(Client client) {
+        client.state = st_queue2;
+        client.tm_arrival_queue2 = this->global_time;
+        this->queue2.push_back(client);
 
-        if(this->debug) printf("Event %lld added to Queue 2 at %Lf.\n", event.identifier, event.tm_arrival_queue2);
+        if(this->debug) printf("Client %lld added to Queue 2 at %Lf.\n", client.identifier, client.tm_arrival_queue2);
     }
 
-    void readd_queue2(Event event) {
-        event.state = st_queue2_retry;
-        this->queue2.push_front(event);
+    void readd_queue2(Client client) {
+        client.state = st_queue2_retry;
+        this->queue2.push_front(client);
 
-        if(this->debug) printf("Event %lld readded to Queue 2 at %Lf.\n", event.identifier, this->global_time);
+        if(this->debug) printf("Client %lld readded to Queue 2 at %Lf.\n", client.identifier, this->global_time);
     }
 
-    Event remove_queue1() {
-        Event event = this->queue1.front();
+    Client remove_queue1() {
+        Client client = this->queue1.front();
         this->queue1.pop_front();
-        return event;
+        return client;
 
-        if(this->debug) printf("Event %lld removed from Queue 1 in %Lf.\n", event.identifier, this->global_time);
+        if(this->debug) printf("Client %lld removed from Queue 1 in %Lf.\n", client.identifier, this->global_time);
     }
 
-    Event remove_queue2() {
-        Event event = this->queue2.front();
+    Client remove_queue2() {
+        Client client = this->queue2.front();
         this->queue2.pop_front();
-        return event;
+        return client;
 
-        if(this->debug) printf("Event %lld removed from Queue 2 in %Lf.\n", event.identifier, this->global_time);
+        if(this->debug) printf("Client %lld removed from Queue 2 in %Lf.\n", client.identifier, this->global_time);
     }
 
-    Event execute_service1(Event event) {
+    Client execute_service1(Client client) {
         // Inicio do Servico
-        event.state = st_service1;
-        event.tm_start_service1 = this->global_time;
+        client.state = st_service1;
+        client.tm_start_service1 = this->global_time;
 
         // Finalizacao do Servico
-        this->global_time += event.tm_service1;
+        this->global_time += client.tm_service1;
         if(this->debug) printf("\n(gt %Lf)\n", this->global_time);
-        event.tm_end_service1 = this->global_time;
+        client.tm_end_service1 = this->global_time;
 
-        if(this->debug) printf("Event %lld executed 1 from %Lf until %Lf.\n", event.identifier, event.tm_start_service1, event.tm_end_service1);
+        if(this->debug) printf("Client %lld executed 1 from %Lf until %Lf.\n", client.identifier, client.tm_start_service1, client.tm_end_service1);
 
-        return event;
+        return client;
     }
 
-    Event execute_service2(Event event) {
+    Client execute_service2(Client client) {
         // Inicio do Servico
-        if(event.state == st_queue2) {      // primeira vez na fila 2
-            event.state = st_service2;
-            event.tm_start_service2 = this->global_time;
+        if(client.state == st_queue2) {      // primeira vez na fila 2
+            client.state = st_service2;
+            client.tm_start_service2 = this->global_time;
         } else {                            // outra vez na fila 2
-            event.state = st_service2_retry;
+            client.state = st_service2_retry;
         }
 
-        long double remaining_service = event.tm_service2 - event.tm_accumulated_service2;
+        long double remaining_service = client.tm_service2 - client.tm_accumulated_service2;
 
         // Se a proxima chegada ocorrer antes do servico atual terminar
         if(this->queue1.size() > 0 && this->queue1.front().tm_arrival <= this->global_time + remaining_service) {
@@ -88,55 +88,55 @@ class QueueSystem {
 
             if(this->debug)
                 printf("[next %Lf | accum %Lf | remaining %Lf | global %Lf | active %Lf]", 
-                    next_arrival, event.tm_accumulated_service2, remaining_service, this->global_time, next_arrival - this->global_time);
+                    next_arrival, client.tm_accumulated_service2, remaining_service, this->global_time, next_arrival - this->global_time);
             
             long double active_time = next_arrival - this->global_time;
-            event.tm_accumulated_service2 += active_time;
+            client.tm_accumulated_service2 += active_time;
             this->global_time += active_time; 
             if(this->debug) printf("\n(gt %Lf)\n", this->global_time);
-            event.state = st_queue2_retry;
+            client.state = st_queue2_retry;
 
-            if(this->debug) printf("Event %lld executed service 2: %Lf/%Lf.\n", event.identifier, event.tm_accumulated_service2, event.tm_service2);
+            if(this->debug) printf("Client %lld executed service 2: %Lf/%Lf.\n", client.identifier, client.tm_accumulated_service2, client.tm_service2);
         
         // Se a proxima chegada na fila 1 nao interrompe o servico atual
         } else {
             if(this->debug)
                 printf("[accum %Lf | remaining %Lf | global %Lf]", 
-                    event.tm_accumulated_service2, remaining_service, this->global_time);
+                    client.tm_accumulated_service2, remaining_service, this->global_time);
 
-            event.tm_accumulated_service2 = event.tm_service2;
-            event.tm_end_service2 = this->global_time + remaining_service;
+            client.tm_accumulated_service2 = client.tm_service2;
+            client.tm_end_service2 = this->global_time + remaining_service;
             this->global_time += remaining_service; 
             if(this->debug) printf("\n(gt %Lf)\n", this->global_time);
-            event.state = st_finished;
+            client.state = st_finished;
 
-            if(this->debug) printf("Event %lld finished service 2 at %Lf.\n", event.identifier, event.tm_end_service2);
+            if(this->debug) printf("Client %lld finished service 2 at %Lf.\n", client.identifier, client.tm_end_service2);
         }
 
-        return event;
+        return client;
     }
 
     void execute() {
-        Event event;
+        Client client;
 
         // Se existe alguem na fila 1 que ja chegou de fato
         if(this->queue1.size() > 0 && this->queue1.front().tm_arrival <= this->global_time){
             if(this->debug) printf("\n[primeiro if]\n");
-            event = this->remove_queue1();
-            event = this->execute_service1(event);
-            this->add_queue2(event);
+            client = this->remove_queue1();
+            client = this->execute_service1(client);
+            this->add_queue2(client);
 
         // Se nao existe ninguem na fila 1 mas existe na 2
         } else if(this->queue2.size() > 0) {
             if(this->debug) printf("\n[segundo if]\n");
-            event = this->remove_queue2();
-            event = this->execute_service2(event);
-            if(event.state == st_finished) {
+            client = this->remove_queue2();
+            client = this->execute_service2(client);
+            if(client.state == st_finished) {
                 if(this->debug) printf("\n[st_finished]\n");
-                finalized.push_back(event);
-            } else if(event.state == st_queue2_retry) {
+                finalized.push_back(client);
+            } else if(client.state == st_queue2_retry) {
                 if(this->debug) printf("\n[st_queue2_retry]\n");
-                this->readd_queue2(event);
+                this->readd_queue2(client);
             }
 
         // Se existe alguem na fila 1 que chega no futuro (ociosidade) - ajuste do tempo

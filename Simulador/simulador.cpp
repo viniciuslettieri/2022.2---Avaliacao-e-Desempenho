@@ -50,9 +50,9 @@ int main(int argc, char* argv[]){
 	long long int total_arrivals = 0;
 	while(queue_system.finalized.size() < clients) {
 		if(queue_system.queue1.size() <= 1 && total_arrivals <= clients){
-			Event next_event = generate_arrival(last_arrival, arrival_generator, service_generator);
-			queue_system.add_queue1(next_event);
-			last_arrival = next_event.tm_arrival;
+			Client next_client = generate_arrival(last_arrival, arrival_generator, service_generator);
+			queue_system.add_queue1(next_client);
+			last_arrival = next_client.tm_arrival;
 			total_arrivals++;
 		}
 
@@ -60,8 +60,8 @@ int main(int argc, char* argv[]){
 	}
 
 	printf("identifier,tm_arrival,tm_service1,tm_service2,tm_arrival_queue1,tm_start_service1,tm_end_service1,tm_arrival_queue2,tm_start_service2,tm_end_service2\n");
-	for(auto event: queue_system.finalized) {
-		print_event(event);
+	for(auto client: queue_system.finalized) {
+		print_client(client);
 	}
 
     return 0;
