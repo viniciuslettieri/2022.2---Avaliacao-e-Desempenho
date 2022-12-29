@@ -11,6 +11,7 @@ long long int identifier = 1;
 
 typedef struct {
     long long int identifier;
+    int round_number;
 
 	State state = st_waiting;
 
@@ -33,6 +34,7 @@ Client generate_arrival(long double current_time, ExponentialGenerator &arrival_
     client.tm_service1 = service_generator.get_random_value();
     client.tm_service2 = service_generator.get_random_value();
     client.identifier = identifier++;
+    client.round_number = 0;
     return client;
 }
 

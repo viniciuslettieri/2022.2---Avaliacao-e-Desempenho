@@ -5,15 +5,15 @@
 using namespace std;
 
 int main(int argc, char* argv[]){
-	if(argc-1 != 5) {
+	if(argc-1 != 6) {
 		printf("Foram passados %d argumentos pelo cmd.\n", argc-1);
-		printf("Esperado [total clientes: int] [modo debug: bool] [arrival seed: int] [service seed: int] [utilizacao: double]\n");
+		printf("Esperado [total clientes: int] [modo debug: bool] [arrival seed: int] [service seed: int] [utilizacao: double] [clientes/round: int]\n");
 		return 1;
 	}
 
 	// Interpretacao dos argumentos de linha
 	int clients = atoi(argv[1]);
-	bool debug = atoi(argv[2]);
+	int debug = atoi(argv[2]);
 	unsigned int arrival_seed;
 	unsigned int service_seed;
 
@@ -27,12 +27,16 @@ int main(int argc, char* argv[]){
 	char *ptr;
 	double rho = strtod(argv[5], &ptr);
 
-	if(debug) {
-		printf("\n[Raw Arguents: clients %s, debug %s, arrival_seed %s, service_seed %s]\n", argv[1], argv[2], argv[3], argv[4]);
-		printf("[Inputs: clients %d, debug %d, arrival_seed %u, service_seed %u]\n\n", clients, debug, arrival_seed, service_seed);
+	int clients_per_round = atoi(argv[6]);
+
+	if(debug == 1) {
+		printf("\n[Raw Arguments: clients %s, debug %s, arrival_seed %s, service_seed %s, rho %s, per_round %s]\n", 
+			argv[1], argv[2], argv[3], argv[4], argv[5], argv[6]);
+		printf("[Inputs: clients %d, debug %d, arrival_seed %u, service_seed %u, rho %f, per_round %d]\n\n", 
+			clients, debug, arrival_seed, service_seed, rho, clients_per_round);
 	}
 
-	QueueSystem queue_system(debug);
+	QueueSystem queue_system(clients_per_round, debug);
 
 	long double last_arrival = 0.0;
 	
@@ -49,19 +53,30 @@ int main(int argc, char* argv[]){
 	// Executamos o simulador ate que todos os clientes tenham sido criados e finalizados
 	long long int total_arrivals = 0;
 	while(queue_system.finalized.size() < clients) {
+		// Criamos apenas a proxima chegada a cada instante
 		if(queue_system.queue1.size() <= 1 && total_arrivals <= clients){
 			Client next_client = generate_arrival(last_arrival, arrival_generator, service_generator);
+
+			if(!queue_system.in_transient_state) {
+				total_arrivals++;
+				next_client.round_number = (total_arrivals-1) / clients_per_round + 1; 
+			}
+
 			queue_system.add_queue1(next_client);
 			last_arrival = next_client.tm_arrival;
-			total_arrivals++;
 		}
 
+		// Execucao do sistema: fila ou servico
 		queue_system.execute();
 	}
 
-	printf("identifier,tm_arrival,tm_service1,tm_service2,tm_arrival_queue1,tm_start_service1,tm_end_service1,tm_arrival_queue2,tm_start_service2,tm_end_service2\n");
-	for(auto client: queue_system.finalized) {
-		print_client(client);
+	queue_system.finish();
+
+	if(debug == 0 || debug == 1) {
+		printf("identifier,tm_arrival,tm_service1,tm_service2,tm_arrival_queue1,tm_start_service1,tm_end_service1,tm_arrival_queue2,tm_start_service2,tm_end_service2\n");
+		for(auto client: queue_system.finalized) {
+			print_client(client);
+		}
 	}
 
     return 0;
