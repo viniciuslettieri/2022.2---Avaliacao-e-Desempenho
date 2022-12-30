@@ -15,6 +15,12 @@ enum EventType {
     service2_departure, queue2_arrival, queue2_departure, service2_arrival
 };
 
+template <class T>
+T vector_avg(std::vector<T> &v) {
+    return accumulate(v.begin(), v.end(), 0.0) / v.size();
+}
+
+
 class StatisticsHandler {
 
     private:
@@ -28,6 +34,11 @@ class StatisticsHandler {
     public:
 
     std::vector<long double> rounds_W1, rounds_W2, rounds_T1, rounds_T2, rounds_X1, rounds_X2, rounds_Nq1, rounds_Nq2, rounds_N1, rounds_N2;
+    long double AvgW1, AvgW2, AvgT1, AvgT2, AvgX1, AvgX2, AvgNq1, AvgNq2, AvgN1, AvgN2;
+    long double VarW1, VarW2, VarT1, VarT2, VarX1, VarX2, VarNq1, VarNq2, VarN1, VarN2;
+    long double DevW1, DevW2, DevT1, DevT2, DevX1, DevX2, DevNq1, DevNq2, DevN1, DevN2;
+    long double IntConfW1, IntConfW2, IntConfT1, IntConfT2, IntConfX1, IntConfX2, IntConfNq1, IntConfNq2, IntConfN1, IntConfN2;
+    long double PrecisionW1, PrecisionW2, PrecisionT1, PrecisionT2, PrecisionX1, PrecisionX2, PrecisionNq1, PrecisionNq2, PrecisionN1, PrecisionN2;
 
     StatisticsHandler(int debug = 0) {
         this->debug = debug;
@@ -45,13 +56,7 @@ class StatisticsHandler {
         this->round_start_times.push_back(time);
     }
 
-    void consolidate_statistics() {
-        if(this->debug == DEBUG_ALL) printf("[Sorted Event List]\n");
-        std::sort(this->event_list.begin(), this->event_list.end());
-
-        // Sets an infinite round to finish the last one
-        this->round_start_times.push_back(std::numeric_limits<long double>::infinity());
-
+    void consolidate_time_metrics_by_round() {
         // Calcula Metricas de Tempo [Nq1, Nq2, N1, N2]
         int Nq1 = 0, Nq2 = 0, N1 = 0, N2 = 0;           // Variaveis de estado independente de round
         long double last_time = 0.0;                    // Tempo do ultimo evento
@@ -85,11 +90,8 @@ class StatisticsHandler {
             // if(start_time_round != this->round_start_times.end() && next_event.first >= *start_time_round) {
             if(
                 start_time_round != this->round_start_times.end() && 
-                (   
-                    (std::next(itr) == event_list.end()) || (event.first >= *start_time_round) 
-                )   
+                ((std::next(itr) == event_list.end()) || (event.first >= *start_time_round))   
             ) {
-                // TODO: Sem um evento final finalizador todas as metricas da ultima rodada sao ignoradas!!!!!
                 AvgNq1 /= total_round_time;
                 AvgN1 /= total_round_time;
                 AvgNq2 /= total_round_time;
@@ -147,7 +149,9 @@ class StatisticsHandler {
 
             last_time = event.first;
         }
+    }
 
+    void consolidate_quantity_metrics_by_round() {
         // Calcula Metricas de Quantidade
         // Adiciona metricas no round apenas se a execucao ocorreu dentro de seu intervalo de tempo
         int tot_rounds = round_start_times.size()-1;
@@ -156,7 +160,6 @@ class StatisticsHandler {
         for(auto client: client_list) {
             // Obtem os tempos de inicio e fim do round desse cliente
             int round_number = client.round_number;
-            long double round_start_time = round_start_times[round_number-1];
             long double round_end_time = round_start_times[round_number];
 
             // Verifica se finalizou a fila 1 antes do tempo do round
@@ -193,6 +196,102 @@ class StatisticsHandler {
                     this->rounds_W2.back(), this->rounds_X2.back(), this->rounds_T2.back());
             }
         }
+    }
+
+    void consolidate_final_metrics() {
+        int nrounds = rounds_N1.size();
+
+        // Media: Sum Xi / n
+        
+        AvgNq1 = vector_avg(rounds_Nq1);
+        AvgNq2 = vector_avg(rounds_Nq2);
+        AvgN1 = vector_avg(rounds_N1);
+        AvgN2 = vector_avg(rounds_N2);
+        AvgW1 = vector_avg(rounds_W1);
+        AvgW2 = vector_avg(rounds_W2);
+        AvgX1 = vector_avg(rounds_X1);
+        AvgX2 = vector_avg(rounds_X2);
+        AvgT1 = vector_avg(rounds_T1);
+        AvgT2 = vector_avg(rounds_T2);
+
+        // Variancia: Sum (Xi - AvgX)^2 / (n-1)
+
+        VarNq1=0, VarNq2=0, VarN1=0, VarN2=0, VarW1=0, VarW2=0, VarX1=0, VarX2=0, VarT1=0, VarT2=0;
+        for(int i=0; i<nrounds; i++) {
+            VarNq1 += pow(rounds_Nq1[i] - AvgNq1, 2);
+            VarNq2 += pow(rounds_Nq2[i] - AvgNq2, 2);
+            VarN1 += pow(rounds_N1[i] - AvgN1, 2);
+            VarN2 += pow(rounds_N2[i] - AvgN2, 2);
+            VarW1 += pow(rounds_W1[i] - AvgW1, 2);
+            VarW2 += pow(rounds_W2[i] - AvgW2, 2);
+            VarX1 += pow(rounds_X1[i] - AvgX1, 2);
+            VarX2 += pow(rounds_X2[i] - AvgX2, 2);
+            VarT1 += pow(rounds_T1[i] - AvgT1, 2);
+            VarT2 += pow(rounds_T2[i] - AvgT2, 2);
+        }
+
+        VarNq1 /= nrounds-1;
+        VarNq2 /= nrounds-1; 
+        VarN1 /= nrounds-1;
+        VarN2 /= nrounds-1;
+        VarW1 /= nrounds-1;
+        VarW2 /= nrounds-1;
+        VarX1 /= nrounds-1;
+        VarX2 /= nrounds-1;
+        VarT1 /= nrounds-1;
+        VarT2 /= nrounds-1;
+
+        // Desvio Padrao: sqrt(VarX)
+
+        DevNq1 = sqrt(VarNq1);
+        DevNq2 = sqrt(VarNq2); 
+        DevN1 = sqrt(VarN1);
+        DevN2 = sqrt(VarN2);
+        DevW1 = sqrt(VarW1);
+        DevW2 = sqrt(VarW2);
+        DevX1 = sqrt(VarX1);
+        DevX2 = sqrt(VarX2);
+        DevT1 = sqrt(VarT1);
+        DevT2 = sqrt(VarT2);
+
+        // Intervalo de Confianca: 1.96 * DevX / sqrt(n)
+
+        IntConfNq1 = 1.96 * DevNq1 / sqrt(nrounds);
+        IntConfNq2 = 1.96 * DevNq2 / sqrt(nrounds); 
+        IntConfN1 = 1.96 * DevN1 / sqrt(nrounds);
+        IntConfN2 = 1.96 * DevN2 / sqrt(nrounds);
+        IntConfW1 = 1.96 * DevW1 / sqrt(nrounds);
+        IntConfW2 = 1.96 * DevW2 / sqrt(nrounds);
+        IntConfX1 = 1.96 * DevX1 / sqrt(nrounds);
+        IntConfX2 = 1.96 * DevX2 / sqrt(nrounds);
+        IntConfT1 = 1.96 * DevT1 / sqrt(nrounds);
+        IntConfT2 = 1.96 * DevT2 / sqrt(nrounds);
+
+        // Precisao: 
+
+        PrecisionNq1 = IntConfNq1 / AvgNq1;
+        PrecisionNq2 = IntConfNq2 / AvgNq2; 
+        PrecisionN1 = IntConfN1 / AvgN1;
+        PrecisionN2 = IntConfN2 / AvgN2;
+        PrecisionW1 = IntConfW1 / AvgW1;
+        PrecisionW2 = IntConfW2 / AvgW2;
+        PrecisionX1 = IntConfX1 / AvgX1;
+        PrecisionX2 = IntConfX2 / AvgX2;
+        PrecisionT1 = IntConfT1 / AvgT1;
+        PrecisionT2 = IntConfT2 / AvgT2;
+
+    }
+
+    void consolidate_statistics() {
+        if(this->debug == DEBUG_ALL) printf("[Sorted Event List]\n");
+        std::sort(this->event_list.begin(), this->event_list.end());
+
+        // Sets an infinite round to finish the last one
+        this->round_start_times.push_back(std::numeric_limits<long double>::infinity());
+
+        this->consolidate_time_metrics_by_round();
+        this->consolidate_quantity_metrics_by_round();
+        this->consolidate_final_metrics();
 
         this->clear_all();
     }
@@ -202,16 +301,16 @@ class StatisticsHandler {
         this->client_list.clear();
     }
 
-    void print_statistics() {
+    void print_statistics_by_round() {
         if(this->debug == DEBUG_ALL || this->debug == DEBUG_IMPORTANT) {
             printf(
-                "\n\nTotal de Rounds: NQ1 %lu, NQ2 %lu, N1 %lu, N2 %lu, W1 %lu, W2 %lu, X1 %lu, X2 %lu, T1 %lu, T2 %lu\n\n",
+                "\n\nTotal de Rounds: Nq1 %lu, Nq2 %lu, N1 %lu, N2 %lu, W1 %lu, W2 %lu, X1 %lu, X2 %lu, T1 %lu, T2 %lu\n\n",
                 rounds_Nq1.size(), rounds_Nq2.size(), rounds_N1.size(), rounds_N2.size(),
                 rounds_W1.size(), rounds_W2.size(), rounds_X1.size(), rounds_X2.size(), rounds_T1.size(), rounds_T2.size()
             );
         }
 
-        printf("round,NQ1,NQ2,N1,N2,W1,W2,X1,X2,T1,T2\n");
+        printf("round,Nq1,Nq2,N1,N2,W1,W2,X1,X2,T1,T2\n");
         for(int i=0; i<rounds_N1.size(); i++) {
             printf(
                 "%d, %Lf, %Lf, %Lf, %Lf, %Lf, %Lf, %Lf, %Lf, %Lf, %Lf\n",

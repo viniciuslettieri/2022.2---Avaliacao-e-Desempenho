@@ -193,7 +193,71 @@ class QueueSystem {
         this->statistics_handler.consolidate_statistics();
 
         if(this->debug) {
-            this->statistics_handler.print_statistics();
+            this->statistics_handler.print_statistics_by_round();
+        }
+        
+        if(this->debug == DEBUG_ALL || this->debug == DEBUG_IMPORTANT){
+            printf("\n\nEstatisticas Finais:\n");
+            printf(
+                "Nq1:\t[%Lf - %Lf]\tcom precisao %Lf\n", 
+                statistics_handler.AvgNq1 - statistics_handler.IntConfNq1,
+                statistics_handler.AvgNq1 + statistics_handler.IntConfNq1,
+                statistics_handler.PrecisionNq1
+            );
+            printf(
+                "Nq2:\t[%Lf - %Lf]\tcom precisao %Lf\n", 
+                statistics_handler.AvgNq2 - statistics_handler.IntConfNq2,
+                statistics_handler.AvgNq2 + statistics_handler.IntConfNq2,
+                statistics_handler.PrecisionNq2
+            );
+            printf(
+                "N1:\t[%Lf - %Lf]\tcom precisao %Lf\n", 
+                statistics_handler.AvgN1 - statistics_handler.IntConfN1,
+                statistics_handler.AvgN1 + statistics_handler.IntConfN1,
+                statistics_handler.PrecisionN1
+            );
+            printf(
+                "N2:\t[%Lf - %Lf]\tcom precisao %Lf\n", 
+                statistics_handler.AvgN2 - statistics_handler.IntConfN2,
+                statistics_handler.AvgN2 + statistics_handler.IntConfN2,
+                statistics_handler.PrecisionN2
+            );
+            printf(
+                "W1:\t[%Lf - %Lf]\tcom precisao %Lf\n", 
+                statistics_handler.AvgW1 - statistics_handler.IntConfW1,
+                statistics_handler.AvgW1 + statistics_handler.IntConfW1,
+                statistics_handler.PrecisionW1
+            );
+            printf(
+                "W2:\t[%Lf - %Lf]\tcom precisao %Lf\n", 
+                statistics_handler.AvgW2 - statistics_handler.IntConfW2,
+                statistics_handler.AvgW2 + statistics_handler.IntConfW2,
+                statistics_handler.PrecisionW2
+            );
+            printf(
+                "X1:\t[%Lf - %Lf]\tcom precisao %Lf\n", 
+                statistics_handler.AvgX1 - statistics_handler.IntConfX1,
+                statistics_handler.AvgX1 + statistics_handler.IntConfX1,
+                statistics_handler.PrecisionX1
+            );
+            printf(
+                "X2:\t[%Lf - %Lf]\tcom precisao %Lf\n", 
+                statistics_handler.AvgX2 - statistics_handler.IntConfX2,
+                statistics_handler.AvgX2 + statistics_handler.IntConfX2,
+                statistics_handler.PrecisionX2
+            );
+            printf(
+                "T1:\t[%Lf - %Lf]\tcom precisao %Lf\n", 
+                statistics_handler.AvgT1 - statistics_handler.IntConfT1,
+                statistics_handler.AvgT1 + statistics_handler.IntConfT1,
+                statistics_handler.PrecisionT1
+            );
+            printf(
+                "T2:\t[%Lf - %Lf]\tcom precisao %Lf\n", 
+                statistics_handler.AvgT2 - statistics_handler.IntConfT2,
+                statistics_handler.AvgT2 + statistics_handler.IntConfT2,
+                statistics_handler.PrecisionT2
+            );
         }
     }
 };
