@@ -14,17 +14,24 @@ class QueueSystem {
     StatisticsHandler statistics_handler;
 
     bool in_transient_state;
+    int transient_clients_left;
     int debug;
 
-	QueueSystem(int clients_per_round, int debug = false) {
+	QueueSystem(int clients_per_round, int transient_clients, int debug = false) {
 		this->global_time = 0.0;
         this->debug = debug;
         this->statistics_handler = StatisticsHandler(debug);
         this->clients_per_round = clients_per_round;
         this->total_clients = 0;
 
-        this->in_transient_state = false;       // TODO: ADICIONAR ESTADO TRANSIENTE 
-        this->current_round = 0;                // TODO: INICIAR NO ROUND 0
+        if(transient_clients == 0)
+            this->in_transient_state = false;
+        else
+            this->in_transient_state = true;
+        
+        this->current_round = 0;
+
+        this->transient_clients_left = transient_clients;
 	}
 
     void add_queue1(Client client) {
@@ -34,12 +41,21 @@ class QueueSystem {
         if(!this->in_transient_state) {
             this->total_clients++;
 
-            // Fechou o Round
+            // Inicia o Round
             if((this->total_clients-1) % this->clients_per_round == 0) {
                 this->current_round++;
                 this->statistics_handler.set_round_time(client.tm_arrival_queue1);
             }
-        } 
+        } else {
+            if(this->debug == DEBUG_ALL) printf("[transient]");
+            
+            this->transient_clients_left--;
+            if(this->transient_clients_left == 0) {
+                if(this->debug == DEBUG_ALL) printf("[transiente finalizado!]");
+                this->statistics_handler.set_system_start(client.tm_arrival);
+                this->in_transient_state = false;
+            }
+        }
         
         this->queue1.push_back(client);   
         this->statistics_handler.add_event(client.tm_arrival_queue1, queue1_arrival);
@@ -167,7 +183,7 @@ class QueueSystem {
             if(this->debug == DEBUG_ALL) printf("\n[segundo if]\n");
             client = this->remove_queue2();
             client = this->execute_service2(client);
-            if(client.state == st_finished) {
+            if(client.state == st_finished && client.round_number != 0) {
                 if(this->debug == DEBUG_ALL) printf("\n[st_finished]\n");
                 finalized.push_back(client);
             } else if(client.state == st_queue2_retry) {
@@ -192,71 +208,82 @@ class QueueSystem {
 
         this->statistics_handler.consolidate_statistics();
 
-        if(this->debug) {
+        if(this->debug < 100) {
             this->statistics_handler.print_statistics_by_round();
         }
         
-        if(this->debug == DEBUG_ALL || this->debug == DEBUG_IMPORTANT){
+        if(this->debug == DEBUG_ALL || this->debug == DEBUG_IMPORTANT || this->debug == DEBUG_FINAL_STATS){
             printf("\n\nEstatisticas Finais:\n");
+
             printf(
-                "Nq1:\t[%Lf - %Lf]\tcom precisao %Lf\n", 
+                "Nq1:\t[%Lf - %Lf]\tcom precisao %Lf\t%s\n", 
                 statistics_handler.AvgNq1 - statistics_handler.IntConfNq1,
                 statistics_handler.AvgNq1 + statistics_handler.IntConfNq1,
-                statistics_handler.PrecisionNq1
+                statistics_handler.PrecisionNq1,
+                statistics_handler.PrecisionNq1 < 0.05 ? "(ok)" : ""
             );
             printf(
-                "Nq2:\t[%Lf - %Lf]\tcom precisao %Lf\n", 
+                "Nq2:\t[%Lf - %Lf]\tcom precisao %Lf\t%s\n", 
                 statistics_handler.AvgNq2 - statistics_handler.IntConfNq2,
                 statistics_handler.AvgNq2 + statistics_handler.IntConfNq2,
-                statistics_handler.PrecisionNq2
+                statistics_handler.PrecisionNq2,
+                statistics_handler.PrecisionNq2 < 0.05 ? "(ok)" : ""
             );
             printf(
-                "N1:\t[%Lf - %Lf]\tcom precisao %Lf\n", 
+                "N1: \t[%Lf - %Lf]\tcom precisao %Lf\t%s\n", 
                 statistics_handler.AvgN1 - statistics_handler.IntConfN1,
                 statistics_handler.AvgN1 + statistics_handler.IntConfN1,
-                statistics_handler.PrecisionN1
+                statistics_handler.PrecisionN1,
+                statistics_handler.PrecisionN1 < 0.05 ? "(ok)" : ""
             );
             printf(
-                "N2:\t[%Lf - %Lf]\tcom precisao %Lf\n", 
+                "N2: \t[%Lf - %Lf]\tcom precisao %Lf\t%s\n", 
                 statistics_handler.AvgN2 - statistics_handler.IntConfN2,
                 statistics_handler.AvgN2 + statistics_handler.IntConfN2,
-                statistics_handler.PrecisionN2
+                statistics_handler.PrecisionN2,
+                statistics_handler.PrecisionN2 < 0.05 ? "(ok)" : ""
             );
             printf(
-                "W1:\t[%Lf - %Lf]\tcom precisao %Lf\n", 
+                "W1: \t[%Lf - %Lf]\tcom precisao %Lf\t%s\n", 
                 statistics_handler.AvgW1 - statistics_handler.IntConfW1,
                 statistics_handler.AvgW1 + statistics_handler.IntConfW1,
-                statistics_handler.PrecisionW1
+                statistics_handler.PrecisionW1,
+                statistics_handler.PrecisionW1 < 0.05 ? "(ok)" : ""
             );
             printf(
-                "W2:\t[%Lf - %Lf]\tcom precisao %Lf\n", 
+                "W2: \t[%Lf - %Lf]\tcom precisao %Lf\t%s\n", 
                 statistics_handler.AvgW2 - statistics_handler.IntConfW2,
                 statistics_handler.AvgW2 + statistics_handler.IntConfW2,
-                statistics_handler.PrecisionW2
+                statistics_handler.PrecisionW2,
+                statistics_handler.PrecisionW2 < 0.05 ? "(ok)" : ""
             );
             printf(
-                "X1:\t[%Lf - %Lf]\tcom precisao %Lf\n", 
+                "X1: \t[%Lf - %Lf]\tcom precisao %Lf\t%s\n", 
                 statistics_handler.AvgX1 - statistics_handler.IntConfX1,
                 statistics_handler.AvgX1 + statistics_handler.IntConfX1,
-                statistics_handler.PrecisionX1
+                statistics_handler.PrecisionX1,
+                statistics_handler.PrecisionX1 < 0.05 ? "(ok)" : ""
             );
             printf(
-                "X2:\t[%Lf - %Lf]\tcom precisao %Lf\n", 
+                "X2: \t[%Lf - %Lf]\tcom precisao %Lf\t%s\n", 
                 statistics_handler.AvgX2 - statistics_handler.IntConfX2,
                 statistics_handler.AvgX2 + statistics_handler.IntConfX2,
-                statistics_handler.PrecisionX2
+                statistics_handler.PrecisionX2,
+                statistics_handler.PrecisionX2 < 0.05 ? "(ok)" : ""
             );
             printf(
-                "T1:\t[%Lf - %Lf]\tcom precisao %Lf\n", 
+                "T1: \t[%Lf - %Lf]\tcom precisao %Lf\t%s\n", 
                 statistics_handler.AvgT1 - statistics_handler.IntConfT1,
                 statistics_handler.AvgT1 + statistics_handler.IntConfT1,
-                statistics_handler.PrecisionT1
+                statistics_handler.PrecisionT1,
+                statistics_handler.PrecisionT1 < 0.05 ? "(ok)" : ""
             );
             printf(
-                "T2:\t[%Lf - %Lf]\tcom precisao %Lf\n", 
+                "T2: \t[%Lf - %Lf]\tcom precisao %Lf\t%s\n", 
                 statistics_handler.AvgT2 - statistics_handler.IntConfT2,
                 statistics_handler.AvgT2 + statistics_handler.IntConfT2,
-                statistics_handler.PrecisionT2
+                statistics_handler.PrecisionT2,
+                statistics_handler.PrecisionT2 < 0.05 ? "(ok)" : ""
             );
         }
     }

@@ -5,9 +5,9 @@
 using namespace std;
 
 int main(int argc, char* argv[]){
-	if(argc-1 != 6) {
+	if(argc-1 != 7) {
 		printf("Foram passados %d argumentos pelo cmd.\n", argc-1);
-		printf("Esperado [modo debug: bool] [arrival seed: int] [service seed: int] [utilizacao: double] [clientes/round: int] [rounds: int]\n");
+		printf("Esperado [modo debug: bool] [arrival seed: int] [service seed: int] [utilizacao: double] [clientes/round: int] [rounds: int] [clientes transiente: int]\n");
 		return 1;
 	}
 
@@ -29,15 +29,21 @@ int main(int argc, char* argv[]){
 	int clients_per_round = atoi(argv[5]);
 
 	int nrounds = atoi(argv[6]);
+	int transient_clients = atoi(argv[7]);
 
 	if(debug == DEBUG_ALL || debug == DEBUG_IMPORTANT) {
-		printf("\n[Raw Arguments: debug %s, arrival_seed %s, service_seed %s, rho %s, per_round %s, rounds %s]\n", 
-			argv[1], argv[2], argv[3], argv[4], argv[5], argv[6]);
-		printf("[Inputs: debug %d, arrival_seed %u, service_seed %u, rho %f, per_round %d, rounds %d]\n\n", 
-			debug, arrival_seed, service_seed, rho, clients_per_round, nrounds);
+		printf("\n[Raw Arguments: debug %s, arrival_seed %s, service_seed %s, rho %s, per_round %s, rounds %s, transient_clients %s]\n", 
+			argv[1], argv[2], argv[3], argv[4], argv[5], argv[6], argv[7]);
+		printf("[Inputs: debug %d, arrival_seed %u, service_seed %u, rho %f, per_round %d, rounds %d, transient_clients %d]\n\n", 
+			debug, arrival_seed, service_seed, rho, clients_per_round, nrounds, transient_clients);
 	}
 
-	QueueSystem queue_system(clients_per_round, debug);
+	// TODO: AUTOMATIZAR A QUANTIDADE DE CLIENTES TRANSIENTES
+	if(transient_clients == -1) {
+		transient_clients = min(1000, (int) (clients_per_round * nrounds / 2));
+	}
+
+	QueueSystem queue_system(clients_per_round, transient_clients, debug);
 
 	long double last_arrival = 0.0;
 	
@@ -55,6 +61,7 @@ int main(int argc, char* argv[]){
 	long long int total_arrivals = 0;
 	int clients = nrounds * clients_per_round;
 	while(queue_system.finalized.size() < clients) {
+		if(debug == DEBUG_ALL) printf("\n[Execute]");
 		// Criamos apenas a proxima chegada a cada instante
 		if(queue_system.queue1.size() <= 1 && queue_system.total_clients < clients){
 			Client next_client = generate_arrival(last_arrival, arrival_generator, service_generator);

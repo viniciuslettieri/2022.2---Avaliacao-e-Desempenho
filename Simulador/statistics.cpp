@@ -6,6 +6,7 @@
 #define DEBUG_STATS 1
 #define DEBUG_IMPORTANT 2
 #define DEBUG_ALL 3
+#define DEBUG_FINAL_STATS 100
 
 
 // Importante que os eventos com conflito de mesmo tempo tenham a ordem bem definida
@@ -28,7 +29,7 @@ class StatisticsHandler {
     std::vector<std::pair<long double, EventType>> event_list;        // time and type of event 
     std::vector<Client> client_list;
     std::vector<long double> round_start_times;
-
+    long double system_start_time;
     int debug;
 
     public:
@@ -42,6 +43,7 @@ class StatisticsHandler {
 
     StatisticsHandler(int debug = 0) {
         this->debug = debug;
+        this->system_start_time = 0;
     }
 
     void add_event(long double event_time, EventType event_type) {
@@ -56,10 +58,14 @@ class StatisticsHandler {
         this->round_start_times.push_back(time);
     }
 
+    void set_system_start(long double time) {
+        this->system_start_time = time;
+    }
+
     void consolidate_time_metrics_by_round() {
         // Calcula Metricas de Tempo [Nq1, Nq2, N1, N2]
-        int Nq1 = 0, Nq2 = 0, N1 = 0, N2 = 0;           // Variaveis de estado independente de round
-        long double last_time = 0.0;                    // Tempo do ultimo evento
+        int Nq1 = 0, Nq2 = 0, N1 = 0, N2 = 0;                       // Variaveis de estado independente de round
+        long double last_time = this->system_start_time;            // Tempo do ultimo evento
         long double AvgNq1 = 0, AvgNq2 = 0, AvgN1 = 0, AvgN2 = 0;   // Variaveis de estado do round atual
         long double total_round_time = 0;                           // Tempo total acumulado do round
 
@@ -69,47 +75,53 @@ class StatisticsHandler {
                 printf(" %Lf ", rounds);
             }
             printf("\n");
+
+            printf("\nEvent List Size: %lu\n", event_list.size());
         }
 
         std::vector<long double>::iterator start_time_round = next(this->round_start_times.begin());    // Iniciamos com o termino do primeiro round
         for(auto itr = event_list.begin(); itr != event_list.end(); itr++) {
             std::pair<long double, EventType> event = *itr;
 
-            long double delta_time = event.first - last_time;
+            // Ignora aqueles da fase transiente
+            if(event.first > this->system_start_time) {
 
-            // Primeiro fazemos a marcacao ponderada durante o delta_time anterior
-            AvgNq1 += Nq1 * delta_time;
-            AvgN1 += N1 * delta_time;
-            AvgNq2 += Nq2 * delta_time;
-            AvgN2 += N2 * delta_time;
-            total_round_time += delta_time;
+                long double delta_time = event.first - last_time;
 
-            // Se o evento atual for o ultimo da lista ou 
-            // for depois do fim do round [mas que o proximo nao acontece junto]: FINALIZA O ROUND
-            std::pair<long double, EventType> next_event = *std::next(itr); 
-            // if(start_time_round != this->round_start_times.end() && next_event.first >= *start_time_round) {
-            if(
-                start_time_round != this->round_start_times.end() && 
-                ((std::next(itr) == event_list.end()) || (event.first >= *start_time_round))   
-            ) {
-                AvgNq1 /= total_round_time;
-                AvgN1 /= total_round_time;
-                AvgNq2 /= total_round_time;
-                AvgN2 /= total_round_time;
+                // Primeiro fazemos a marcacao ponderada durante o delta_time anterior
+                AvgNq1 += Nq1 * delta_time;
+                AvgN1 += N1 * delta_time;
+                AvgNq2 += Nq2 * delta_time;
+                AvgN2 += N2 * delta_time;
+                total_round_time += delta_time;
 
-                if(this->debug == DEBUG_ALL || this->debug == DEBUG_IMPORTANT) {
-                    printf("\nQuantity Metrics: AvgN1 %Lf, AvgN2 %Lf, AvgNq1 %Lf, AvgNq2 %Lf", AvgN1, AvgN2, AvgNq1, AvgNq2);
+                // Se o evento atual for o ultimo da lista ou 
+                // for depois do fim do round [mas que o proximo nao acontece junto]: FINALIZA O ROUND
+                std::pair<long double, EventType> next_event = *std::next(itr); 
+                if(
+                    start_time_round != this->round_start_times.end() && 
+                    ((std::next(itr) == event_list.end()) || (event.first >= *start_time_round))   
+                ) {
+                    AvgNq1 /= total_round_time;
+                    AvgN1 /= total_round_time;
+                    AvgNq2 /= total_round_time;
+                    AvgN2 /= total_round_time;
+
+                    if(this->debug == DEBUG_ALL || this->debug == DEBUG_IMPORTANT) {
+                        printf("\nQuantity Metrics: AvgN1 %Lf, AvgN2 %Lf, AvgNq1 %Lf, AvgNq2 %Lf", AvgN1, AvgN2, AvgNq1, AvgNq2);
+                    }
+
+                    this->rounds_N1.push_back(AvgN1);
+                    this->rounds_N2.push_back(AvgN2);
+                    this->rounds_Nq1.push_back(AvgNq1);
+                    this->rounds_Nq2.push_back(AvgNq2);
+
+                    // Reseta apenas os acumulados do round
+                    AvgNq1 = 0, AvgNq2 = 0, AvgN1 = 0, AvgN2 = 0, total_round_time = 0;
+
+                    start_time_round++;
                 }
 
-                this->rounds_N1.push_back(AvgN1);
-                this->rounds_N2.push_back(AvgN2);
-                this->rounds_Nq1.push_back(AvgNq1);
-                this->rounds_Nq2.push_back(AvgNq2);
-
-                // Reseta apenas os acumulados do round
-                AvgNq1 = 0, AvgNq2 = 0, AvgN1 = 0, AvgN2 = 0, total_round_time = 0;
-
-                start_time_round++;
             }
 
             // Atualizamos as quantidades nas estruturas
@@ -157,22 +169,29 @@ class StatisticsHandler {
         int tot_rounds = round_start_times.size()-1;
         std::vector<std::vector<long double>> W1(tot_rounds), X1(tot_rounds), T1(tot_rounds), W2(tot_rounds), X2(tot_rounds), T2(tot_rounds);
         
+        if(this->debug == DEBUG_ALL) {
+            printf("\nClient List Size: %lu\n", client_list.size());
+        }
+
         for(auto client: client_list) {
+            if(client.round_number < 1) continue;
+
             // Obtem os tempos de inicio e fim do round desse cliente
             int round_number = client.round_number;
+            long double round_start_time = round_start_times[round_number-1];
             long double round_end_time = round_start_times[round_number];
 
             // Verifica se finalizou a fila 1 antes do tempo do round
-            if(client.tm_start_service1 <= round_end_time) {
+            if(client.tm_arrival_queue1 >= round_start_time && client.tm_start_service1 <= round_end_time) {
                 W1[round_number-1].push_back(client.tm_start_service1 - client.tm_arrival_queue1);
             }
             // Verifica se finalizou o servico 1 antes do tempo do round
-            if(client.tm_end_service1 <= round_end_time) {
+            if(client.tm_start_service1 >= round_start_time && client.tm_end_service1 <= round_end_time) {
                 X1[round_number-1].push_back(client.tm_end_service1 - client.tm_start_service1);
                 T1[round_number-1].push_back(client.tm_end_service1 - client.tm_arrival_queue1);
             }
             // Verifica se finalizou a fila 2 + servico 2 antes do tempo do round
-            if(client.tm_end_service2 <= round_end_time) {
+            if(client.tm_arrival_queue2 >= round_start_time && client.tm_end_service2 <= round_end_time) {
                 T2[round_number-1].push_back(client.tm_end_service2 - client.tm_arrival_queue2);
                 X2[round_number-1].push_back(client.tm_service2);
                 W2[round_number-1].push_back(client.tm_end_service2 - client.tm_arrival_queue2 - client.tm_service2);   // W = T - X
@@ -292,13 +311,6 @@ class StatisticsHandler {
         this->consolidate_time_metrics_by_round();
         this->consolidate_quantity_metrics_by_round();
         this->consolidate_final_metrics();
-
-        this->clear_all();
-    }
-
-    void clear_all() {
-        this->event_list.clear();
-        this->client_list.clear();
     }
 
     void print_statistics_by_round() {
@@ -308,15 +320,15 @@ class StatisticsHandler {
                 rounds_Nq1.size(), rounds_Nq2.size(), rounds_N1.size(), rounds_N2.size(),
                 rounds_W1.size(), rounds_W2.size(), rounds_X1.size(), rounds_X2.size(), rounds_T1.size(), rounds_T2.size()
             );
-        }
-
-        printf("round,Nq1,Nq2,N1,N2,W1,W2,X1,X2,T1,T2\n");
-        for(int i=0; i<rounds_N1.size(); i++) {
-            printf(
-                "%d, %Lf, %Lf, %Lf, %Lf, %Lf, %Lf, %Lf, %Lf, %Lf, %Lf\n",
-                i+1, rounds_Nq1[i], rounds_Nq2[i], rounds_N1[i], rounds_N2[i],
-                rounds_W1[i], rounds_W2[i], rounds_X1[i], rounds_X2[i], rounds_T1[i], rounds_T2[i]
-            );
+         
+            printf("round,Nq1,Nq2,N1,N2,W1,W2,X1,X2,T1,T2\n");
+            for(int i=0; i<rounds_N1.size(); i++) {
+                printf(
+                    "%d, %Lf, %Lf, %Lf, %Lf, %Lf, %Lf, %Lf, %Lf, %Lf, %Lf\n",
+                    i+1, rounds_Nq1[i], rounds_Nq2[i], rounds_N1[i], rounds_N2[i],
+                    rounds_W1[i], rounds_W2[i], rounds_X1[i], rounds_X2[i], rounds_T1[i], rounds_T2[i]
+                );
+            }
         }
     }
 };
