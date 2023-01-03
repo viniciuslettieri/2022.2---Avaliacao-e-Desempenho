@@ -34,6 +34,10 @@ class QueueSystem {
         this->transient_clients_left = transient_clients;
 	}
 
+    void set_deterministic_arrivals(std::deque<Client> &deterministic_queue1) {
+        this->queue1.insert(this->queue1.end(), deterministic_queue1.begin(), deterministic_queue1.end());
+    }
+
     void add_queue1(Client client) {
         client.state = st_queue1;
         client.tm_arrival_queue1 = client.tm_arrival;

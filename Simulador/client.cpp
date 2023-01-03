@@ -38,6 +38,17 @@ Client generate_arrival(long double current_time, ExponentialGenerator &arrival_
     return client;
 }
 
+Client generate_deterministic_arrival(long double tm_arrival1, long double tm_service1, long double tm_service2, long double round_number) {
+    Client client;
+    client.tm_arrival = tm_arrival1;
+    client.tm_arrival_queue1 = tm_arrival1;
+    client.tm_service1 = tm_service1;
+    client.tm_service2 = tm_service2;
+    client.identifier = identifier++;
+    client.round_number = round_number;
+    return client;
+}
+
 void print_client(Client client) {
     // printf("\nClient %lld:\n", client.identifier);
     // printf("Arrival: %Lf\nService 1: %Lf\nService 2: %Lf\n", client.tm_arrival, client.tm_service1, client.tm_service2);

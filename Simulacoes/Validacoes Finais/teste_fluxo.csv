@@ -1,0 +1,2 @@
+identifier,tm_arrival,tm_service1,tm_service2,tm_arrival_queue1,tm_start_service1,tm_end_service1,tm_arrival_queue2,tm_start_service2,tm_end_service2
+1, 0.100000, 1.000000, 1.000000, 0.100000, 0.100000, 1.100000, 1.100000, 1.100000, 2.100000

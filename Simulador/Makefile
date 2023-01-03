@@ -57,3 +57,11 @@ validacaoOtimizacaoMelhor:
 validacaoOtimizacao:
 	g++ -o simulador.o simulador.cpp
 	./simulador.o 100 -1 -1 0.6 3071 110 15000
+
+validacaoDeterministica:
+	g++ -o simulador_deterministico.o simulador_deterministico.cpp
+	./simulador_deterministico.o
+
+validacaoDeterministicaSave:
+	g++ -o simulador_deterministico.o simulador_deterministico.cpp
+	./simulador_deterministico.o > ../Simulacoes/validacao_deterministica.csv
