@@ -62,8 +62,8 @@ class StatisticsHandler {
         this->system_start_time = time;
     }
 
-    void consolidate_time_metrics_by_round() {
-        // Calcula Metricas de Tempo [Nq1, Nq2, N1, N2]
+    void consolidate_quantity_metrics_by_round() {
+        // Calcula Metricas de Quantidade [Nq1, Nq2, N1, N2]
         int Nq1 = 0, Nq2 = 0, N1 = 0, N2 = 0;                       // Variaveis de estado independente de round
         long double last_time = this->system_start_time;            // Tempo do ultimo evento
         long double AvgNq1 = 0, AvgNq2 = 0, AvgN1 = 0, AvgN2 = 0;   // Variaveis de estado do round atual
@@ -163,8 +163,8 @@ class StatisticsHandler {
         }
     }
 
-    void consolidate_quantity_metrics_by_round() {
-        // Calcula Metricas de Quantidade
+    void consolidate_time_metrics_by_round() {
+        // Calcula Metricas de Tempo
         // Adiciona metricas no round apenas se a execucao ocorreu dentro de seu intervalo de tempo
         int tot_rounds = round_start_times.size()-1;
         std::vector<std::vector<long double>> W1(tot_rounds), X1(tot_rounds), T1(tot_rounds), W2(tot_rounds), X2(tot_rounds), T2(tot_rounds);
@@ -308,8 +308,8 @@ class StatisticsHandler {
         // Sets an infinite round to finish the last one
         this->round_start_times.push_back(std::numeric_limits<long double>::infinity());
 
-        this->consolidate_time_metrics_by_round();
         this->consolidate_quantity_metrics_by_round();
+        this->consolidate_time_metrics_by_round();
         this->consolidate_final_metrics();
     }
 
