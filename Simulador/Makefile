@@ -65,3 +65,7 @@ validacaoDeterministica:
 validacaoDeterministicaSave:
 	g++ -o simulador_deterministico.o simulador_deterministico.cpp
 	./simulador_deterministico.o > ../Simulacoes/validacao_deterministica.csv
+
+validacaoFaseTransiente:
+	g++ -o simulador_validacao_transiente.o simulador_validacao_transiente.cpp
+	./simulador_validacao_transiente.o

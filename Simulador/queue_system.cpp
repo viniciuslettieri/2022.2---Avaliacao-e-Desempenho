@@ -17,10 +17,10 @@ class QueueSystem {
     int transient_clients_left;
     int debug;
 
-	QueueSystem(int clients_per_round, int transient_clients, int debug = false) {
+	QueueSystem(int clients_per_round, int transient_clients, int debug = false, bool transient_mode = false) {
 		this->global_time = 0.0;
         this->debug = debug;
-        this->statistics_handler = StatisticsHandler(debug);
+        this->statistics_handler = StatisticsHandler(debug, transient_mode);
         this->clients_per_round = clients_per_round;
         this->total_clients = 0;
 

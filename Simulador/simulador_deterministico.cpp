@@ -69,7 +69,7 @@ int main(){
 
 	queue_system.finish();
 
-	if(debug == NO_DEBUG || debug == DEBUG_ALL) {
+	if(debug == DEBUG_CLIENTS || debug == DEBUG_ALL) {
 		printf("identifier,tm_arrival,tm_service1,tm_service2,tm_arrival_queue1,tm_start_service1,tm_end_service1,tm_arrival_queue2,tm_start_service2,tm_end_service2\n");
 		for(auto client: queue_system.finalized) {
 			print_client(client);
