@@ -7,6 +7,7 @@
 #define DEBUG_IMPORTANT 2
 #define DEBUG_ALL 3
 #define DEBUG_FINAL_STATS 100
+#define DEBUG_CLIENTS 101
 
 
 // Importante que os eventos com conflito de mesmo tempo tenham a ordem bem definida
@@ -21,6 +22,16 @@ T vector_avg(std::vector<T> &v) {
     return accumulate(v.begin(), v.end(), 0.0) / v.size();
 }
 
+template <class T>
+T vector_variance(std::vector<T> &v, T avg) {
+    long double Var = 0;
+    for(int i=0; i<v.size(); i++)
+        Var += pow(v[i] - avg, 2);
+    
+    Var /= v.size()-1;
+    return Var;
+}
+
 
 class StatisticsHandler {
 
@@ -31,6 +42,7 @@ class StatisticsHandler {
     std::vector<long double> round_start_times;
     long double system_start_time;
     int debug;
+    int transient_mode;         // mode for testing transient phase
 
     public:
 
@@ -41,9 +53,10 @@ class StatisticsHandler {
     long double IntConfW1, IntConfW2, IntConfT1, IntConfT2, IntConfX1, IntConfX2, IntConfNq1, IntConfNq2, IntConfN1, IntConfN2;
     long double PrecisionW1, PrecisionW2, PrecisionT1, PrecisionT2, PrecisionX1, PrecisionX2, PrecisionNq1, PrecisionNq2, PrecisionN1, PrecisionN2;
 
-    StatisticsHandler(int debug = 0) {
+    StatisticsHandler(int debug = 0, bool transient_mode = false) {
         this->debug = debug;
         this->system_start_time = 0;
+        this->transient_mode = transient_mode;
     }
 
     void add_event(long double event_time, EventType event_type) {
@@ -51,6 +64,8 @@ class StatisticsHandler {
     }
 
     void add_client(Client client) {
+        if(this->transient_mode) client.round_number = 1;
+
         this->client_list.push_back(client);
     }
 
@@ -72,7 +87,7 @@ class StatisticsHandler {
         if(this->debug == DEBUG_ALL || this->debug == DEBUG_IMPORTANT) {
             printf("Rounds: ");
             for(auto rounds: round_start_times) {
-                printf(" %Lf ", rounds);
+                printf(" %.3Lf ", rounds);
             }
             printf("\n");
 
@@ -84,7 +99,7 @@ class StatisticsHandler {
             std::pair<long double, EventType> event = *itr;
 
             // Ignora aqueles da fase transiente
-            if(event.first > this->system_start_time) {
+            if(event.first >= this->system_start_time) {
 
                 long double delta_time = event.first - last_time;
 
@@ -99,8 +114,9 @@ class StatisticsHandler {
                 // for depois do fim do round [mas que o proximo nao acontece junto]: FINALIZA O ROUND
                 std::pair<long double, EventType> next_event = *std::next(itr); 
                 if(
-                    start_time_round != this->round_start_times.end() && 
-                    ((std::next(itr) == event_list.end()) || (event.first >= *start_time_round))   
+                    (start_time_round != this->round_start_times.end() && 
+                    ((std::next(itr) == event_list.end()) || (event.first >= *start_time_round))) ||
+                    this->transient_mode
                 ) {
                     AvgNq1 /= total_round_time;
                     AvgN1 /= total_round_time;
@@ -108,7 +124,8 @@ class StatisticsHandler {
                     AvgN2 /= total_round_time;
 
                     if(this->debug == DEBUG_ALL || this->debug == DEBUG_IMPORTANT) {
-                        printf("\nQuantity Metrics: AvgN1 %Lf, AvgN2 %Lf, AvgNq1 %Lf, AvgNq2 %Lf", AvgN1, AvgN2, AvgNq1, AvgNq2);
+                        printf("\nQuantity Metrics: AvgN1 %.3Lf, AvgN2 %.3Lf, AvgNq1 %.3Lf, AvgNq2 %.3Lf", AvgN1, AvgN2, AvgNq1, AvgNq2);
+                        printf("\nTotal Round Time: %.3Lf\n", total_round_time);
                     }
 
                     this->rounds_N1.push_back(AvgN1);
@@ -127,37 +144,39 @@ class StatisticsHandler {
             // Atualizamos as quantidades nas estruturas
             switch(event.second) {
                 case queue1_arrival: Nq1++; N1++; 
-                // printf("(queue1_arrival : %Lf)\n", event.first);
+                if(debug == DEBUG_ALL) printf("\n(queue1_arrival : %.3Lf)", event.first);
                 break;
 
                 case queue1_departure: Nq1--; N1--; 
-                // printf("(queue1_departure : %Lf)\n", event.first);
+                if(debug == DEBUG_ALL) printf("\n(queue1_departure : %.3Lf)", event.first);
                 break;
 
                 case queue2_arrival: Nq2++; N2++; 
-                // printf("(queue2_arrival : %Lf)\n", event.first);
+                if(debug == DEBUG_ALL) printf("\n(queue2_arrival : %.3Lf)", event.first);
                 break;
 
                 case queue2_departure: Nq2--; N2--; 
-                // printf("(queue2_departure : %Lf)\n", event.first);
+                if(debug == DEBUG_ALL) printf("\n(queue2_departure : %.3Lf)", event.first);
                 break;
 
                 case service1_arrival: N1++; 
-                // printf("(service1_arrival : %Lf)\n", event.first);
+                if(debug == DEBUG_ALL) printf("\n(service1_arrival : %.3Lf)", event.first);
                 break;
 
                 case service1_departure: N1--; 
-                // printf("(service1_departure : %Lf)\n", event.first);
+                if(debug == DEBUG_ALL) printf("\n(service1_departure : %.3Lf)", event.first);
                 break;
 
                 case service2_arrival: N2++; 
-                // printf("(service2_arrival : %Lf)\n", event.first);
+                if(debug == DEBUG_ALL) printf("\n(service2_arrival : %.3Lf)", event.first);
                 break;
 
                 case service2_departure: N2--; 
-                // printf("(service2_departure : %Lf)\n", event.first);
+                if(debug == DEBUG_ALL) printf("\n(service2_departure : %.3Lf)", event.first);
                 break;
             }
+
+            if(debug == DEBUG_ALL) printf("\tCurrent State: Nq1 %d Nq2 %d N1 %d N2 %d", Nq1, Nq2, N1, N2);
 
             last_time = event.first;
         }
@@ -182,16 +201,16 @@ class StatisticsHandler {
             long double round_end_time = round_start_times[round_number];
 
             // Verifica se finalizou a fila 1 antes do tempo do round
-            if(client.tm_arrival_queue1 >= round_start_time && client.tm_start_service1 <= round_end_time) {
+            if((client.tm_arrival_queue1 >= round_start_time && client.tm_start_service1 <= round_end_time) || this->transient_mode) {
                 W1[round_number-1].push_back(client.tm_start_service1 - client.tm_arrival_queue1);
             }
             // Verifica se finalizou o servico 1 antes do tempo do round
-            if(client.tm_start_service1 >= round_start_time && client.tm_end_service1 <= round_end_time) {
+            if((client.tm_start_service1 >= round_start_time && client.tm_end_service1 <= round_end_time) || this->transient_mode) {
                 X1[round_number-1].push_back(client.tm_end_service1 - client.tm_start_service1);
                 T1[round_number-1].push_back(client.tm_end_service1 - client.tm_arrival_queue1);
             }
             // Verifica se finalizou a fila 2 + servico 2 antes do tempo do round
-            if(client.tm_arrival_queue2 >= round_start_time && client.tm_end_service2 <= round_end_time) {
+            if((client.tm_arrival_queue2 >= round_start_time && client.tm_end_service2 <= round_end_time) || this->transient_mode) {
                 T2[round_number-1].push_back(client.tm_end_service2 - client.tm_arrival_queue2);
                 X2[round_number-1].push_back(client.tm_service2);
                 W2[round_number-1].push_back(client.tm_end_service2 - client.tm_arrival_queue2 - client.tm_service2);   // W = T - X
@@ -210,7 +229,7 @@ class StatisticsHandler {
             this->rounds_T2.push_back(T2[i].size() == 0 ? 0.0 : accumulate(T2[i].begin(), T2[i].end(), 0.0) / T2[i].size());
             
             if(this->debug == DEBUG_ALL || this->debug == DEBUG_IMPORTANT){
-                printf("\nTime Metrics [round %d]: W1 %Lf, X1 %Lf, T1 %Lf, W2 %Lf, X2 %Lf, T2 %Lf", 
+                printf("\nTime Metrics [round %d]: AvgW1 %.3Lf, AvgX1 %.3Lf, AvgT1 %.3Lf, AvgW2 %.3Lf, AvgX2 %.3Lf, AvgT2 %.3Lf", 
                     i+1, this->rounds_W1.back(), this->rounds_X1.back(), this->rounds_T1.back(),
                     this->rounds_W2.back(), this->rounds_X2.back(), this->rounds_T2.back());
             }
@@ -218,8 +237,7 @@ class StatisticsHandler {
     }
 
     void consolidate_final_metrics() {
-        int nrounds = rounds_N1.size();
-
+        
         // Media: Sum Xi / n
         
         AvgNq1 = vector_avg(rounds_Nq1);
@@ -235,30 +253,16 @@ class StatisticsHandler {
 
         // Variancia: Sum (Xi - AvgX)^2 / (n-1)
 
-        VarNq1=0, VarNq2=0, VarN1=0, VarN2=0, VarW1=0, VarW2=0, VarX1=0, VarX2=0, VarT1=0, VarT2=0;
-        for(int i=0; i<nrounds; i++) {
-            VarNq1 += pow(rounds_Nq1[i] - AvgNq1, 2);
-            VarNq2 += pow(rounds_Nq2[i] - AvgNq2, 2);
-            VarN1 += pow(rounds_N1[i] - AvgN1, 2);
-            VarN2 += pow(rounds_N2[i] - AvgN2, 2);
-            VarW1 += pow(rounds_W1[i] - AvgW1, 2);
-            VarW2 += pow(rounds_W2[i] - AvgW2, 2);
-            VarX1 += pow(rounds_X1[i] - AvgX1, 2);
-            VarX2 += pow(rounds_X2[i] - AvgX2, 2);
-            VarT1 += pow(rounds_T1[i] - AvgT1, 2);
-            VarT2 += pow(rounds_T2[i] - AvgT2, 2);
-        }
-
-        VarNq1 /= nrounds-1;
-        VarNq2 /= nrounds-1; 
-        VarN1 /= nrounds-1;
-        VarN2 /= nrounds-1;
-        VarW1 /= nrounds-1;
-        VarW2 /= nrounds-1;
-        VarX1 /= nrounds-1;
-        VarX2 /= nrounds-1;
-        VarT1 /= nrounds-1;
-        VarT2 /= nrounds-1;
+        VarNq1 = vector_variance(rounds_Nq1, AvgNq1);
+        VarNq2 = vector_variance(rounds_Nq2, AvgNq2);
+        VarN1 = vector_variance(rounds_N1, AvgN1);
+        VarN2 = vector_variance(rounds_N2, AvgN2);
+        VarW1 = vector_variance(rounds_W1, AvgW1);
+        VarW2 = vector_variance(rounds_W2, AvgW2);
+        VarX1 = vector_variance(rounds_X1, AvgX1);
+        VarX2 = vector_variance(rounds_X2, AvgX2);
+        VarT1 = vector_variance(rounds_T1, AvgT1);
+        VarT2 = vector_variance(rounds_T2, AvgT2);
 
         // Desvio Padrao: sqrt(VarX)
 
@@ -275,16 +279,16 @@ class StatisticsHandler {
 
         // Intervalo de Confianca: 1.96 * DevX / sqrt(n)
 
-        IntConfNq1 = 1.96 * DevNq1 / sqrt(nrounds);
-        IntConfNq2 = 1.96 * DevNq2 / sqrt(nrounds); 
-        IntConfN1 = 1.96 * DevN1 / sqrt(nrounds);
-        IntConfN2 = 1.96 * DevN2 / sqrt(nrounds);
-        IntConfW1 = 1.96 * DevW1 / sqrt(nrounds);
-        IntConfW2 = 1.96 * DevW2 / sqrt(nrounds);
-        IntConfX1 = 1.96 * DevX1 / sqrt(nrounds);
-        IntConfX2 = 1.96 * DevX2 / sqrt(nrounds);
-        IntConfT1 = 1.96 * DevT1 / sqrt(nrounds);
-        IntConfT2 = 1.96 * DevT2 / sqrt(nrounds);
+        IntConfNq1 = 1.96 * DevNq1 / sqrt(rounds_Nq1.size());
+        IntConfNq2 = 1.96 * DevNq2 / sqrt(rounds_Nq2.size()); 
+        IntConfN1 = 1.96 * DevN1 / sqrt(rounds_N1.size());
+        IntConfN2 = 1.96 * DevN2 / sqrt(rounds_N2.size());
+        IntConfW1 = 1.96 * DevW1 / sqrt(rounds_W1.size());
+        IntConfW2 = 1.96 * DevW2 / sqrt(rounds_W2.size());
+        IntConfX1 = 1.96 * DevX1 / sqrt(rounds_X1.size());
+        IntConfX2 = 1.96 * DevX2 / sqrt(rounds_X2.size());
+        IntConfT1 = 1.96 * DevT1 / sqrt(rounds_T1.size());
+        IntConfT2 = 1.96 * DevT2 / sqrt(rounds_T2.size());
 
         // Precisao: 
 
@@ -324,7 +328,7 @@ class StatisticsHandler {
             printf("round,Nq1,Nq2,N1,N2,W1,W2,X1,X2,T1,T2\n");
             for(int i=0; i<rounds_N1.size(); i++) {
                 printf(
-                    "%d, %Lf, %Lf, %Lf, %Lf, %Lf, %Lf, %Lf, %Lf, %Lf, %Lf\n",
+                    "%d, %.3Lf, %.3Lf, %.3Lf, %.3Lf, %.3Lf, %.3Lf, %.3Lf, %.3Lf, %.3Lf, %.3Lf\n",
                     i+1, rounds_Nq1[i], rounds_Nq2[i], rounds_N1[i], rounds_N2[i],
                     rounds_W1[i], rounds_W2[i], rounds_X1[i], rounds_X2[i], rounds_T1[i], rounds_T2[i]
                 );

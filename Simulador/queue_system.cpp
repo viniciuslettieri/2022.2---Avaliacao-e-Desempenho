@@ -17,19 +17,18 @@ class QueueSystem {
     int transient_clients_left;
     int debug;
 
-	QueueSystem(int clients_per_round, int transient_clients, int debug = false) {
+	QueueSystem(int clients_per_round, int transient_clients, int debug = false, bool transient_mode = false) {
 		this->global_time = 0.0;
         this->debug = debug;
-        this->statistics_handler = StatisticsHandler(debug);
+        this->statistics_handler = StatisticsHandler(debug, transient_mode);
         this->clients_per_round = clients_per_round;
         this->total_clients = 0;
+        this->current_round = 0;
 
         if(transient_clients == 0)
             this->in_transient_state = false;
         else
             this->in_transient_state = true;
-        
-        this->current_round = 0;
 
         this->transient_clients_left = transient_clients;
 	}
@@ -64,7 +63,7 @@ class QueueSystem {
         this->queue1.push_back(client);   
         this->statistics_handler.add_event(client.tm_arrival_queue1, queue1_arrival);
 
-        if(this->debug == DEBUG_ALL) printf("Client %lld added to Queue 1 at %Lf.\n", client.identifier, client.tm_arrival_queue1);
+        if(this->debug == DEBUG_ALL) printf("Client %lld added to Queue 1 at %.3Lf.\n", client.identifier, client.tm_arrival_queue1);
     }
 
     void add_queue2(Client client) {
@@ -73,7 +72,7 @@ class QueueSystem {
         this->queue2.push_back(client);
         this->statistics_handler.add_event(client.tm_arrival_queue2, queue2_arrival);
 
-        if(this->debug == DEBUG_ALL) printf("Client %lld added to Queue 2 at %Lf.\n", client.identifier, client.tm_arrival_queue2);
+        if(this->debug == DEBUG_ALL) printf("Client %lld added to Queue 2 at %.3Lf.\n", client.identifier, client.tm_arrival_queue2);
     }
 
     void readd_queue2(Client client) {
@@ -81,7 +80,7 @@ class QueueSystem {
         this->queue2.push_front(client);
         this->statistics_handler.add_event(this->global_time, queue2_arrival);
 
-        if(this->debug == DEBUG_ALL) printf("Client %lld readded to Queue 2 at %Lf.\n", client.identifier, this->global_time);
+        if(this->debug == DEBUG_ALL) printf("Client %lld readded to Queue 2 at %.3Lf.\n", client.identifier, this->global_time);
     }
 
     Client remove_queue1() {
@@ -89,7 +88,7 @@ class QueueSystem {
         this->queue1.pop_front();
         this->statistics_handler.add_event(this->global_time, queue1_departure);
 
-        if(this->debug == DEBUG_ALL) printf("Client %lld removed from Queue 1 in %Lf.\n", client.identifier, this->global_time);
+        if(this->debug == DEBUG_ALL) printf("Client %lld removed from Queue 1 in %.3Lf.\n", client.identifier, this->global_time);
         
         return client;
     }
@@ -99,7 +98,7 @@ class QueueSystem {
         this->queue2.pop_front();
         this->statistics_handler.add_event(this->global_time, queue2_departure);
 
-        if(this->debug == DEBUG_ALL) printf("Client %lld removed from Queue 2 in %Lf.\n", client.identifier, this->global_time);
+        if(this->debug == DEBUG_ALL) printf("Client %lld removed from Queue 2 in %.3Lf.\n", client.identifier, this->global_time);
         
         return client;
     }
@@ -112,11 +111,11 @@ class QueueSystem {
 
         // Finalizacao do Servico
         this->global_time += client.tm_service1;
-        if(this->debug == DEBUG_ALL) printf("\n(gt %Lf)\n", this->global_time);
+        if(this->debug == DEBUG_ALL) printf("\n(gt %.3Lf)\n", this->global_time);
         client.tm_end_service1 = this->global_time;
         this->statistics_handler.add_event(client.tm_end_service1, service1_departure);
 
-        if(this->debug == DEBUG_ALL) printf("Client %lld executed 1 from %Lf until %Lf.\n", client.identifier, client.tm_start_service1, client.tm_end_service1);
+        if(this->debug == DEBUG_ALL) printf("Client %lld executed 1 from %.3Lf until %.3Lf.\n", client.identifier, client.tm_start_service1, client.tm_end_service1);
 
         return client;
     }
@@ -138,35 +137,35 @@ class QueueSystem {
             long double next_arrival = this->queue1.front().tm_arrival;
 
             if(this->debug == DEBUG_ALL)
-                printf("[next %Lf | accum %Lf | remaining %Lf | global %Lf | active %Lf]", 
+                printf("[next %.3Lf | accum %.3Lf | remaining %.3Lf | global %.3Lf | active %.3Lf]", 
                     next_arrival, client.tm_accumulated_service2, remaining_service, this->global_time, next_arrival - this->global_time);
             
             long double active_time = next_arrival - this->global_time;
             client.tm_accumulated_service2 += active_time;
             this->global_time += active_time; 
-            if(this->debug == DEBUG_ALL) printf("\n(gt %Lf)\n", this->global_time);
+            if(this->debug == DEBUG_ALL) printf("\n(gt %.3Lf)\n", this->global_time);
             client.state = st_queue2_retry;
 
             this->statistics_handler.add_event(this->global_time, service2_departure);
 
-            if(this->debug == DEBUG_ALL) printf("Client %lld executed service 2: %Lf/%Lf.\n", client.identifier, client.tm_accumulated_service2, client.tm_service2);
+            if(this->debug == DEBUG_ALL) printf("Client %lld executed service 2: %.3Lf/%.3Lf.\n", client.identifier, client.tm_accumulated_service2, client.tm_service2);
         
         // Se a proxima chegada na fila 1 nao interrompe o servico atual
         } else {
             if(this->debug == DEBUG_ALL)
-                printf("[accum %Lf | remaining %Lf | global %Lf]", 
+                printf("[accum %.3Lf | remaining %.3Lf | global %.3Lf]", 
                     client.tm_accumulated_service2, remaining_service, this->global_time);
 
             client.tm_accumulated_service2 = client.tm_service2;
             client.tm_end_service2 = this->global_time + remaining_service;
             this->global_time += remaining_service; 
-            if(this->debug == DEBUG_ALL) printf("\n(gt %Lf)\n", this->global_time);
+            if(this->debug == DEBUG_ALL) printf("\n(gt %.3Lf)\n", this->global_time);
             client.state = st_finished;
 
             this->statistics_handler.add_event(this->global_time, service2_departure);
             this->statistics_handler.add_client(client);
 
-            if(this->debug == DEBUG_ALL) printf("Client %lld finished service 2 at %Lf.\n", client.identifier, client.tm_end_service2);
+            if(this->debug == DEBUG_ALL) printf("Client %lld finished service 2 at %.3Lf.\n", client.identifier, client.tm_end_service2);
         }
 
         return client;
@@ -199,7 +198,7 @@ class QueueSystem {
         } else if(this->queue1.size()) {
             if(this->debug == DEBUG_ALL) printf("\n[terceiro if]\n");
             this->global_time = this->queue1.front().tm_arrival; 
-            if(this->debug == DEBUG_ALL) printf("\n(gt %Lf)\n", this->global_time);
+            if(this->debug == DEBUG_ALL) printf("\n(gt %.3Lf)\n", this->global_time);
         }
     }
 
@@ -220,70 +219,70 @@ class QueueSystem {
             printf("\n\nEstatisticas Finais:\n");
 
             printf(
-                "Nq1:\t[%Lf - %Lf]\tcom precisao %Lf\t%s\n", 
+                "Nq1:\t[%.3Lf - %.3Lf]\tcom precisao %.3Lf\t%s\n", 
                 statistics_handler.AvgNq1 - statistics_handler.IntConfNq1,
                 statistics_handler.AvgNq1 + statistics_handler.IntConfNq1,
                 statistics_handler.PrecisionNq1,
                 statistics_handler.PrecisionNq1 < 0.05 ? "(ok)" : ""
             );
             printf(
-                "Nq2:\t[%Lf - %Lf]\tcom precisao %Lf\t%s\n", 
+                "Nq2:\t[%.3Lf - %.3Lf]\tcom precisao %.3Lf\t%s\n", 
                 statistics_handler.AvgNq2 - statistics_handler.IntConfNq2,
                 statistics_handler.AvgNq2 + statistics_handler.IntConfNq2,
                 statistics_handler.PrecisionNq2,
                 statistics_handler.PrecisionNq2 < 0.05 ? "(ok)" : ""
             );
             printf(
-                "N1: \t[%Lf - %Lf]\tcom precisao %Lf\t%s\n", 
+                "N1: \t[%.3Lf - %.3Lf]\tcom precisao %.3Lf\t%s\n", 
                 statistics_handler.AvgN1 - statistics_handler.IntConfN1,
                 statistics_handler.AvgN1 + statistics_handler.IntConfN1,
                 statistics_handler.PrecisionN1,
                 statistics_handler.PrecisionN1 < 0.05 ? "(ok)" : ""
             );
             printf(
-                "N2: \t[%Lf - %Lf]\tcom precisao %Lf\t%s\n", 
+                "N2: \t[%.3Lf - %.3Lf]\tcom precisao %.3Lf\t%s\n", 
                 statistics_handler.AvgN2 - statistics_handler.IntConfN2,
                 statistics_handler.AvgN2 + statistics_handler.IntConfN2,
                 statistics_handler.PrecisionN2,
                 statistics_handler.PrecisionN2 < 0.05 ? "(ok)" : ""
             );
             printf(
-                "W1: \t[%Lf - %Lf]\tcom precisao %Lf\t%s\n", 
+                "W1: \t[%.3Lf - %.3Lf]\tcom precisao %.3Lf\t%s\n", 
                 statistics_handler.AvgW1 - statistics_handler.IntConfW1,
                 statistics_handler.AvgW1 + statistics_handler.IntConfW1,
                 statistics_handler.PrecisionW1,
                 statistics_handler.PrecisionW1 < 0.05 ? "(ok)" : ""
             );
             printf(
-                "W2: \t[%Lf - %Lf]\tcom precisao %Lf\t%s\n", 
+                "W2: \t[%.3Lf - %.3Lf]\tcom precisao %.3Lf\t%s\n", 
                 statistics_handler.AvgW2 - statistics_handler.IntConfW2,
                 statistics_handler.AvgW2 + statistics_handler.IntConfW2,
                 statistics_handler.PrecisionW2,
                 statistics_handler.PrecisionW2 < 0.05 ? "(ok)" : ""
             );
             printf(
-                "X1: \t[%Lf - %Lf]\tcom precisao %Lf\t%s\n", 
+                "X1: \t[%.3Lf - %.3Lf]\tcom precisao %.3Lf\t%s\n", 
                 statistics_handler.AvgX1 - statistics_handler.IntConfX1,
                 statistics_handler.AvgX1 + statistics_handler.IntConfX1,
                 statistics_handler.PrecisionX1,
                 statistics_handler.PrecisionX1 < 0.05 ? "(ok)" : ""
             );
             printf(
-                "X2: \t[%Lf - %Lf]\tcom precisao %Lf\t%s\n", 
+                "X2: \t[%.3Lf - %.3Lf]\tcom precisao %.3Lf\t%s\n", 
                 statistics_handler.AvgX2 - statistics_handler.IntConfX2,
                 statistics_handler.AvgX2 + statistics_handler.IntConfX2,
                 statistics_handler.PrecisionX2,
                 statistics_handler.PrecisionX2 < 0.05 ? "(ok)" : ""
             );
             printf(
-                "T1: \t[%Lf - %Lf]\tcom precisao %Lf\t%s\n", 
+                "T1: \t[%.3Lf - %.3Lf]\tcom precisao %.3Lf\t%s\n", 
                 statistics_handler.AvgT1 - statistics_handler.IntConfT1,
                 statistics_handler.AvgT1 + statistics_handler.IntConfT1,
                 statistics_handler.PrecisionT1,
                 statistics_handler.PrecisionT1 < 0.05 ? "(ok)" : ""
             );
             printf(
-                "T2: \t[%Lf - %Lf]\tcom precisao %Lf\t%s\n", 
+                "T2: \t[%.3Lf - %.3Lf]\tcom precisao %.3Lf\t%s\n", 
                 statistics_handler.AvgT2 - statistics_handler.IntConfT2,
                 statistics_handler.AvgT2 + statistics_handler.IntConfT2,
                 statistics_handler.PrecisionT2,
