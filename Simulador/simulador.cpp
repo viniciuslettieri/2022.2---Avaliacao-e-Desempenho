@@ -59,13 +59,14 @@ int main(int argc, char* argv[]){
 		transient_clients = transient_table(rho);
 	}
 
-	QueueSystem queue_system(clients_per_round, transient_clients, debug);
-
 	long double last_arrival = 0.0;
-	
-	double lambda = rho / 2.0;
-	ExponentialGenerator arrival_generator(lambda);
-	ExponentialGenerator service_generator(1.0);
+	double lambda_arrival = rho / 2.0;
+	double lambda_service = 1.0;
+
+	QueueSystem queue_system(clients_per_round, transient_clients, lambda_arrival, lambda_service, debug);
+
+	ExponentialGenerator arrival_generator(lambda_arrival);
+	ExponentialGenerator service_generator(lambda_service);
 
 	if(arrival_seed != -1)
 		arrival_generator.set_deterministic_seed(arrival_seed);

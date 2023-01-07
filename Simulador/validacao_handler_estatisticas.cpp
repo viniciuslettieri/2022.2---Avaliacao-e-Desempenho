@@ -12,7 +12,7 @@ QueueSystem two_round(int &clients_per_round, int &nrounds, int &transient_clien
 	transient_clients = 0;
 	debug = DEBUG_ALL;
 
-	QueueSystem queue_system(clients_per_round, transient_clients, debug);
+	QueueSystem queue_system(clients_per_round, transient_clients, 0, 0, debug);
 
 	queue_system.add_queue1(generate_deterministic_arrival(0.5, 1.0, 0.5, 1));
 	queue_system.add_queue1(generate_deterministic_arrival(1.0, 1.5, 1.0, 1));
@@ -29,7 +29,7 @@ QueueSystem two_round_overlay(int &clients_per_round, int &nrounds, int &transie
 	transient_clients = 0;
 	debug = DEBUG_ALL;
 
-	QueueSystem queue_system(clients_per_round, transient_clients, debug);
+	QueueSystem queue_system(clients_per_round, transient_clients, 0, 0, debug);
 
 	queue_system.add_queue1(generate_deterministic_arrival(0.5, 1.0, 0.5, 1));
 	queue_system.add_queue1(generate_deterministic_arrival(1.0, 1.5, 1.0, 1));

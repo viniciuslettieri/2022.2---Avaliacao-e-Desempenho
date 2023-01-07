@@ -14,7 +14,7 @@ QueueSystem set_flow_test(int &clients_per_round, int &nrounds, int &transient_c
 	transient_clients = 0;
 	debug = DEBUG_CLIENTS;
 
-	QueueSystem queue_system(clients_per_round, transient_clients, debug);
+	QueueSystem queue_system(clients_per_round, transient_clients, 0, 0, debug);
 
 	queue_system.add_queue1(generate_deterministic_arrival(0.1, 1.0, 1.0, 1));
 
@@ -30,7 +30,7 @@ QueueSystem set_priority_test(int &clients_per_round, int &nrounds, int &transie
 	transient_clients = 0;
 	debug = DEBUG_CLIENTS;
 
-	QueueSystem queue_system(clients_per_round, transient_clients, debug);
+	QueueSystem queue_system(clients_per_round, transient_clients, 0, 0, debug);
 
 	queue_system.add_queue1(generate_deterministic_arrival(0.1, 1.0, 2.0, 1));
 	queue_system.add_queue1(generate_deterministic_arrival(0.8, 1.2, 1.0, 1));
@@ -49,7 +49,7 @@ QueueSystem set_interruption_test(int &clients_per_round, int &nrounds, int &tra
 	transient_clients = 0;
 	debug = DEBUG_CLIENTS;
 
-	QueueSystem queue_system(clients_per_round, transient_clients, debug);
+	QueueSystem queue_system(clients_per_round, transient_clients, 0, 0, debug);
 
 	queue_system.add_queue1(generate_deterministic_arrival(0.1, 1.0, 2.0, 1));
 	queue_system.add_queue1(generate_deterministic_arrival(1.3, 1.2, 1.0, 1));

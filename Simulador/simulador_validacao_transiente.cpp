@@ -45,16 +45,18 @@ int main(int argc, char* argv[]){
         for(int nrounds = 30000; nrounds <= 30000; nrounds += 1000) {
         // for(int nrounds = 1000; nrounds <= 100000; nrounds += 1000) {
 
+            long double last_arrival = 0.0;
+            double lambda_arrival = rho / 2.0;
+            double lambda_arrival = 1.0;
+
             // A forma que simulamos a fase transiente é atraves de uma simulacao com 1 cliente para K rounds
             // onde K é a quantidade de 'clientes transientes'.
 
-            QueueSystem queue_system(clients_per_round, transient_clients, debug, false);
+            QueueSystem queue_system(clients_per_round, transient_clients, lambda_arrival, lambda_service, debug, false);
 
-            long double last_arrival = 0.0;
-            double lambda = rho / 2.0;
             
-            ExponentialGenerator arrival_generator(lambda);
-            ExponentialGenerator service_generator(1.0);
+            ExponentialGenerator arrival_generator(lambda_arrival);
+            ExponentialGenerator service_generator(lambda_service);
 
             // Executamos o simulador ate que todos os clientes tenham sido criados e finalizados
             long long int total_arrivals = 0;

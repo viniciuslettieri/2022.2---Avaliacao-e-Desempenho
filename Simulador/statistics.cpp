@@ -10,6 +10,20 @@
 #define DEBUG_CLIENTS 101
 
 
+// Utils 
+void print_metric(std::string metric_name, long double expected, long double ic_lower, long double ic_upper, long double precision) {
+    printf(
+        "%s:\tEsperado [%.3Lf]\tIC: [%.3Lf - %.3Lf] com precisao %.3Lf\t\t%s\t%s\n", 
+        metric_name.c_str(),
+        expected,
+        ic_lower,
+        ic_upper,
+        precision,
+        precision < 0.05 ? "(Precisão Ok)" : "             ",
+        expected >= ic_lower && expected <= ic_upper ? "(Dentro do IC)" : "             "
+    );
+}
+
 // Importante que os eventos com conflito de mesmo tempo tenham a ordem bem definida
 // Relevante principalmente no caso de interrupcao e volta pra fila
 enum EventType { 
@@ -31,7 +45,6 @@ T vector_variance(std::vector<T> &v, T avg) {
     Var /= v.size()-1;
     return Var;
 }
-
 
 class StatisticsHandler {
 

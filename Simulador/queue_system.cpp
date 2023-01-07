@@ -6,6 +6,8 @@ class QueueSystem {
 
 	public:
 
+    double lambda_arrival, lambda_service;
+
     long double global_time;
     int total_clients;
     int clients_per_round, current_round;
@@ -17,13 +19,16 @@ class QueueSystem {
     int transient_clients_left;
     int debug;
 
-	QueueSystem(int clients_per_round, int transient_clients, int debug = false, bool transient_mode = false) {
+	QueueSystem(int clients_per_round, int transient_clients, double lambda_arrival, double lambda_service, int debug = false, bool transient_mode = false) {
 		this->global_time = 0.0;
         this->debug = debug;
         this->statistics_handler = StatisticsHandler(debug, transient_mode);
         this->clients_per_round = clients_per_round;
         this->total_clients = 0;
         this->current_round = 0;
+
+        this->lambda_arrival = lambda_arrival;
+        this->lambda_service = lambda_service;
 
         if(transient_clients == 0)
             this->in_transient_state = false;
@@ -214,79 +219,88 @@ class QueueSystem {
         if(this->debug < 100) {
             this->statistics_handler.print_statistics_by_round();
         }
+
+        // Obtencao das medidas analiticas para comparacao
+        long double ExpectedAvgX1 = 1/lambda_service;
+        long double ExpectedAvgX2 = 1/lambda_service;
+        long double rho = 2 * lambda_arrival;
+        long double rho1 = lambda_arrival * ExpectedAvgX1;
+        long double rho2 = lambda_arrival * ExpectedAvgX2;
+        long double rhoXr = rho1 * ExpectedAvgX1 + rho2 * ExpectedAvgX2 + lambda_arrival * ExpectedAvgX1 * ExpectedAvgX2;
+        
+        long double ExpectedAvgW1 = (rho1 * ExpectedAvgX1) / (1 - rho1);
+        long double ExpectedAvgT1 = ExpectedAvgW1 + ExpectedAvgX1;
+        
+        long double ExpectedAvgT = (rhoXr + (1-rho)*(ExpectedAvgX1 + ExpectedAvgX2))/((1-rho) * (1-rho1));
+        long double ExpectedAvgT2 = ExpectedAvgT - ExpectedAvgT1;
+        long double ExpectedAvgW2 = ExpectedAvgT2 - ExpectedAvgX2;
+        long double ExpectedAvgN1 = lambda_arrival * ExpectedAvgT1;
+        long double ExpectedAvgN2 = lambda_arrival * ExpectedAvgT2;
+        long double ExpectedAvgNq1 = lambda_arrival * ExpectedAvgW1;
+        long double ExpectedAvgNq2 = lambda_arrival * ExpectedAvgW2;
         
         if(this->debug == DEBUG_ALL || this->debug == DEBUG_IMPORTANT || this->debug == DEBUG_FINAL_STATS){
-            printf("\n\nEstatisticas Finais:\n");
+            printf("\n\nEstatisticas Finais: [rho1 = %.3Lf, rho2 = %.3Lf]\n", rho1, rho2);
 
-            printf(
-                "Nq1:\t[%.3Lf - %.3Lf]\tcom precisao %.3Lf\t%s\n", 
+            print_metric(
+                "Nq1", ExpectedAvgNq1,
                 statistics_handler.AvgNq1 - statistics_handler.IntConfNq1,
                 statistics_handler.AvgNq1 + statistics_handler.IntConfNq1,
-                statistics_handler.PrecisionNq1,
-                statistics_handler.PrecisionNq1 < 0.05 ? "(ok)" : ""
+                statistics_handler.PrecisionNq1
             );
-            printf(
-                "Nq2:\t[%.3Lf - %.3Lf]\tcom precisao %.3Lf\t%s\n", 
+            print_metric(
+                "Nq2", ExpectedAvgNq2,
                 statistics_handler.AvgNq2 - statistics_handler.IntConfNq2,
                 statistics_handler.AvgNq2 + statistics_handler.IntConfNq2,
-                statistics_handler.PrecisionNq2,
-                statistics_handler.PrecisionNq2 < 0.05 ? "(ok)" : ""
+                statistics_handler.PrecisionNq2
             );
-            printf(
-                "N1: \t[%.3Lf - %.3Lf]\tcom precisao %.3Lf\t%s\n", 
+            print_metric(
+                "N1", ExpectedAvgN1,
                 statistics_handler.AvgN1 - statistics_handler.IntConfN1,
                 statistics_handler.AvgN1 + statistics_handler.IntConfN1,
-                statistics_handler.PrecisionN1,
-                statistics_handler.PrecisionN1 < 0.05 ? "(ok)" : ""
+                statistics_handler.PrecisionN1
             );
-            printf(
-                "N2: \t[%.3Lf - %.3Lf]\tcom precisao %.3Lf\t%s\n", 
+            print_metric(
+                "N2", ExpectedAvgN2,
                 statistics_handler.AvgN2 - statistics_handler.IntConfN2,
                 statistics_handler.AvgN2 + statistics_handler.IntConfN2,
-                statistics_handler.PrecisionN2,
-                statistics_handler.PrecisionN2 < 0.05 ? "(ok)" : ""
+                statistics_handler.PrecisionN2
             );
-            printf(
-                "W1: \t[%.3Lf - %.3Lf]\tcom precisao %.3Lf\t%s\n", 
+            print_metric(
+                "W1", ExpectedAvgW1,
                 statistics_handler.AvgW1 - statistics_handler.IntConfW1,
                 statistics_handler.AvgW1 + statistics_handler.IntConfW1,
-                statistics_handler.PrecisionW1,
-                statistics_handler.PrecisionW1 < 0.05 ? "(ok)" : ""
+                statistics_handler.PrecisionW1
             );
-            printf(
-                "W2: \t[%.3Lf - %.3Lf]\tcom precisao %.3Lf\t%s\n", 
+            print_metric(
+                "W2", ExpectedAvgW2,
                 statistics_handler.AvgW2 - statistics_handler.IntConfW2,
                 statistics_handler.AvgW2 + statistics_handler.IntConfW2,
-                statistics_handler.PrecisionW2,
-                statistics_handler.PrecisionW2 < 0.05 ? "(ok)" : ""
+                statistics_handler.PrecisionW2
             );
-            printf(
-                "X1: \t[%.3Lf - %.3Lf]\tcom precisao %.3Lf\t%s\n", 
+            print_metric(
+                "X1", ExpectedAvgX1,
                 statistics_handler.AvgX1 - statistics_handler.IntConfX1,
                 statistics_handler.AvgX1 + statistics_handler.IntConfX1,
-                statistics_handler.PrecisionX1,
-                statistics_handler.PrecisionX1 < 0.05 ? "(ok)" : ""
+                statistics_handler.PrecisionX1
             );
-            printf(
-                "X2: \t[%.3Lf - %.3Lf]\tcom precisao %.3Lf\t%s\n", 
+            print_metric(
+                "X2", ExpectedAvgX2,
                 statistics_handler.AvgX2 - statistics_handler.IntConfX2,
                 statistics_handler.AvgX2 + statistics_handler.IntConfX2,
-                statistics_handler.PrecisionX2,
-                statistics_handler.PrecisionX2 < 0.05 ? "(ok)" : ""
+                statistics_handler.PrecisionX2
             );
-            printf(
-                "T1: \t[%.3Lf - %.3Lf]\tcom precisao %.3Lf\t%s\n", 
+            print_metric(
+                "T1", ExpectedAvgT1,
                 statistics_handler.AvgT1 - statistics_handler.IntConfT1,
                 statistics_handler.AvgT1 + statistics_handler.IntConfT1,
-                statistics_handler.PrecisionT1,
-                statistics_handler.PrecisionT1 < 0.05 ? "(ok)" : ""
+                statistics_handler.PrecisionT1
             );
-            printf(
-                "T2: \t[%.3Lf - %.3Lf]\tcom precisao %.3Lf\t%s\n", 
+            print_metric(
+                "T2", ExpectedAvgT2,
                 statistics_handler.AvgT2 - statistics_handler.IntConfT2,
                 statistics_handler.AvgT2 + statistics_handler.IntConfT2,
-                statistics_handler.PrecisionT2,
-                statistics_handler.PrecisionT2 < 0.05 ? "(ok)" : ""
+                statistics_handler.PrecisionT2
             );
         }
     }
