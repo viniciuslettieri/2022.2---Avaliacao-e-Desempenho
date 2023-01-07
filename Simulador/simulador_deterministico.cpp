@@ -6,59 +6,66 @@ using namespace std;
 
 // Sequencia de criacao: tm_arrival, tm_service1, tm_service2, round_number
 
-void set_flow_test(std::deque<Client> &deterministic_queue1, int &clients_per_round, int &nrounds, int &transient_clients, int &debug){
+QueueSystem set_flow_test(int &clients_per_round, int &nrounds, int &transient_clients, int &debug){
 	// Queremos simular apenas um cliente para verificar se as metricas estao sendo coletadas
 
-	deterministic_queue1.push_back(generate_deterministic_arrival(0.1, 1.0, 1.0, 1));
-
-	clients_per_round = deterministic_queue1.size();
+	clients_per_round = 1;
 	nrounds = 1;
 	transient_clients = 0;
-	debug = NO_DEBUG;
+	debug = DEBUG_CLIENTS;
+
+	QueueSystem queue_system(clients_per_round, transient_clients, debug);
+
+	queue_system.add_queue1(generate_deterministic_arrival(0.1, 1.0, 1.0, 1));
+
+	return queue_system;
 }
 
 
-void set_priority_test(std::deque<Client> &deterministic_queue1, int &clients_per_round, int &nrounds, int &transient_clients, int &debug){
+QueueSystem set_priority_test(int &clients_per_round, int &nrounds, int &transient_clients, int &debug){
 	// Queremos simular a prioridade da fila 1 em relacao a fila 2
 
-	deterministic_queue1.push_back(generate_deterministic_arrival(0.1, 1.0, 2.0, 1));
-	deterministic_queue1.push_back(generate_deterministic_arrival(0.8, 1.2, 1.0, 1));
-	deterministic_queue1.push_back(generate_deterministic_arrival(1.3, 0.9, 1.0, 1));
-	deterministic_queue1.push_back(generate_deterministic_arrival(1.8, 1.1, 1.0, 1));
-
-	clients_per_round = deterministic_queue1.size();
+	clients_per_round = 4;
 	nrounds = 1;
 	transient_clients = 0;
-	debug = NO_DEBUG;
+	debug = DEBUG_CLIENTS;
+
+	QueueSystem queue_system(clients_per_round, transient_clients, debug);
+
+	queue_system.add_queue1(generate_deterministic_arrival(0.1, 1.0, 2.0, 1));
+	queue_system.add_queue1(generate_deterministic_arrival(0.8, 1.2, 1.0, 1));
+	queue_system.add_queue1(generate_deterministic_arrival(1.3, 0.9, 1.0, 1));
+	queue_system.add_queue1(generate_deterministic_arrival(1.8, 1.1, 1.0, 1));
+
+	return queue_system;
 }
 
 
-void set_interruption_test(std::deque<Client> &deterministic_queue1, int &clients_per_round, int &nrounds, int &transient_clients, int &debug){
+QueueSystem set_interruption_test(int &clients_per_round, int &nrounds, int &transient_clients, int &debug){
 	// Queremos simular a interrupcao que a fila 1 faz em cima da fila 2
 
-	deterministic_queue1.push_back(generate_deterministic_arrival(0.1, 1.0, 2.0, 1));
-	deterministic_queue1.push_back(generate_deterministic_arrival(1.3, 1.2, 1.0, 1));
-	deterministic_queue1.push_back(generate_deterministic_arrival(2.9, 0.9, 1.0, 1));
-	deterministic_queue1.push_back(generate_deterministic_arrival(3.0, 1.1, 1.0, 1));
-
-	clients_per_round = deterministic_queue1.size();
+	clients_per_round = 4;
 	nrounds = 1;
 	transient_clients = 0;
-	debug = NO_DEBUG;
+	debug = DEBUG_CLIENTS;
+
+	QueueSystem queue_system(clients_per_round, transient_clients, debug);
+
+	queue_system.add_queue1(generate_deterministic_arrival(0.1, 1.0, 2.0, 1));
+	queue_system.add_queue1(generate_deterministic_arrival(1.3, 1.2, 1.0, 1));
+	queue_system.add_queue1(generate_deterministic_arrival(2.9, 0.9, 1.0, 1));
+	queue_system.add_queue1(generate_deterministic_arrival(3.0, 1.1, 1.0, 1));
+
+	return queue_system;
 }
 
 
 int main(){
 	int clients_per_round, nrounds, transient_clients, debug;
 
-	std::deque<Client> deterministic_queue1;
-
-	// set_flow_test(deterministic_queue1, clients_per_round, nrounds, transient_clients, debug);
-	// set_priority_test(deterministic_queue1, clients_per_round, nrounds, transient_clients, debug);
-	set_interruption_test(deterministic_queue1, clients_per_round, nrounds, transient_clients, debug);
-
-	QueueSystem queue_system(clients_per_round, transient_clients, debug);
-	queue_system.set_deterministic_arrivals(deterministic_queue1);
+	// QueueSystem queue_system = set_flow_test(clients_per_round, nrounds, transient_clients, debug);
+	// QueueSystem queue_system = set_priority_test(clients_per_round, nrounds, transient_clients, debug);
+	QueueSystem queue_system = set_interruption_test(clients_per_round, nrounds, transient_clients, debug);
 	
 	// Executamos o simulador
 	long long int total_arrivals = 0;

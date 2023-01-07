@@ -87,7 +87,7 @@ class StatisticsHandler {
         if(this->debug == DEBUG_ALL || this->debug == DEBUG_IMPORTANT) {
             printf("Rounds: ");
             for(auto rounds: round_start_times) {
-                printf(" %Lf ", rounds);
+                printf(" %.3Lf ", rounds);
             }
             printf("\n");
 
@@ -99,7 +99,7 @@ class StatisticsHandler {
             std::pair<long double, EventType> event = *itr;
 
             // Ignora aqueles da fase transiente
-            if(event.first > this->system_start_time) {
+            if(event.first >= this->system_start_time) {
 
                 long double delta_time = event.first - last_time;
 
@@ -124,7 +124,8 @@ class StatisticsHandler {
                     AvgN2 /= total_round_time;
 
                     if(this->debug == DEBUG_ALL || this->debug == DEBUG_IMPORTANT) {
-                        printf("\nQuantity Metrics: AvgN1 %Lf, AvgN2 %Lf, AvgNq1 %Lf, AvgNq2 %Lf", AvgN1, AvgN2, AvgNq1, AvgNq2);
+                        printf("\nQuantity Metrics: AvgN1 %.3Lf, AvgN2 %.3Lf, AvgNq1 %.3Lf, AvgNq2 %.3Lf", AvgN1, AvgN2, AvgNq1, AvgNq2);
+                        printf("\nTotal Round Time: %.3Lf\n", total_round_time);
                     }
 
                     this->rounds_N1.push_back(AvgN1);
@@ -143,37 +144,39 @@ class StatisticsHandler {
             // Atualizamos as quantidades nas estruturas
             switch(event.second) {
                 case queue1_arrival: Nq1++; N1++; 
-                // printf("(queue1_arrival : %Lf)\n", event.first);
+                if(debug == DEBUG_ALL) printf("\n(queue1_arrival : %.3Lf)", event.first);
                 break;
 
                 case queue1_departure: Nq1--; N1--; 
-                // printf("(queue1_departure : %Lf)\n", event.first);
+                if(debug == DEBUG_ALL) printf("\n(queue1_departure : %.3Lf)", event.first);
                 break;
 
                 case queue2_arrival: Nq2++; N2++; 
-                // printf("(queue2_arrival : %Lf)\n", event.first);
+                if(debug == DEBUG_ALL) printf("\n(queue2_arrival : %.3Lf)", event.first);
                 break;
 
                 case queue2_departure: Nq2--; N2--; 
-                // printf("(queue2_departure : %Lf)\n", event.first);
+                if(debug == DEBUG_ALL) printf("\n(queue2_departure : %.3Lf)", event.first);
                 break;
 
                 case service1_arrival: N1++; 
-                // printf("(service1_arrival : %Lf)\n", event.first);
+                if(debug == DEBUG_ALL) printf("\n(service1_arrival : %.3Lf)", event.first);
                 break;
 
                 case service1_departure: N1--; 
-                // printf("(service1_departure : %Lf)\n", event.first);
+                if(debug == DEBUG_ALL) printf("\n(service1_departure : %.3Lf)", event.first);
                 break;
 
                 case service2_arrival: N2++; 
-                // printf("(service2_arrival : %Lf)\n", event.first);
+                if(debug == DEBUG_ALL) printf("\n(service2_arrival : %.3Lf)", event.first);
                 break;
 
                 case service2_departure: N2--; 
-                // printf("(service2_departure : %Lf)\n", event.first);
+                if(debug == DEBUG_ALL) printf("\n(service2_departure : %.3Lf)", event.first);
                 break;
             }
+
+            if(debug == DEBUG_ALL) printf("\tCurrent State: Nq1 %d Nq2 %d N1 %d N2 %d", Nq1, Nq2, N1, N2);
 
             last_time = event.first;
         }
@@ -226,7 +229,7 @@ class StatisticsHandler {
             this->rounds_T2.push_back(T2[i].size() == 0 ? 0.0 : accumulate(T2[i].begin(), T2[i].end(), 0.0) / T2[i].size());
             
             if(this->debug == DEBUG_ALL || this->debug == DEBUG_IMPORTANT){
-                printf("\nTime Metrics [round %d]: W1 %Lf, X1 %Lf, T1 %Lf, W2 %Lf, X2 %Lf, T2 %Lf", 
+                printf("\nTime Metrics [round %d]: AvgW1 %.3Lf, AvgX1 %.3Lf, AvgT1 %.3Lf, AvgW2 %.3Lf, AvgX2 %.3Lf, AvgT2 %.3Lf", 
                     i+1, this->rounds_W1.back(), this->rounds_X1.back(), this->rounds_T1.back(),
                     this->rounds_W2.back(), this->rounds_X2.back(), this->rounds_T2.back());
             }
@@ -325,7 +328,7 @@ class StatisticsHandler {
             printf("round,Nq1,Nq2,N1,N2,W1,W2,X1,X2,T1,T2\n");
             for(int i=0; i<rounds_N1.size(); i++) {
                 printf(
-                    "%d, %Lf, %Lf, %Lf, %Lf, %Lf, %Lf, %Lf, %Lf, %Lf, %Lf\n",
+                    "%d, %.3Lf, %.3Lf, %.3Lf, %.3Lf, %.3Lf, %.3Lf, %.3Lf, %.3Lf, %.3Lf, %.3Lf\n",
                     i+1, rounds_Nq1[i], rounds_Nq2[i], rounds_N1[i], rounds_N2[i],
                     rounds_W1[i], rounds_W2[i], rounds_X1[i], rounds_X2[i], rounds_T1[i], rounds_T2[i]
                 );

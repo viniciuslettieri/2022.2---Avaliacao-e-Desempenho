@@ -51,10 +51,10 @@ Client generate_deterministic_arrival(long double tm_arrival1, long double tm_se
 
 void print_client(Client client) {
     // printf("\nClient %lld:\n", client.identifier);
-    // printf("Arrival: %Lf\nService 1: %Lf\nService 2: %Lf\n", client.tm_arrival, client.tm_service1, client.tm_service2);
-    // printf("Arrival in Queue 1: %Lf\nArrival in Service 1: %Lf\nEnd of Service 1: %Lf\n", client.tm_arrival_queue1, client.tm_start_service1, client.tm_end_service1);
-    // printf("Arrival in Queue 2: %Lf\nEnd of Service 2: %Lf\n", client.tm_arrival_queue2, client.tm_end_service2);
-    printf("%lld, %Lf, %Lf, %Lf, %Lf, %Lf, %Lf, %Lf, %Lf, %Lf\n", 
+    // printf("Arrival: %.3Lf\nService 1: %.3Lf\nService 2: %.3Lf\n", client.tm_arrival, client.tm_service1, client.tm_service2);
+    // printf("Arrival in Queue 1: %.3Lf\nArrival in Service 1: %.3Lf\nEnd of Service 1: %.3Lf\n", client.tm_arrival_queue1, client.tm_start_service1, client.tm_end_service1);
+    // printf("Arrival in Queue 2: %.3Lf\nEnd of Service 2: %.3Lf\n", client.tm_arrival_queue2, client.tm_end_service2);
+    printf("%lld, %.3Lf, %.3Lf, %.3Lf, %.3Lf, %.3Lf, %.3Lf, %.3Lf, %.3Lf, %.3Lf\n", 
             client.identifier, client.tm_arrival, client.tm_service1, client.tm_service2,
             client.tm_arrival_queue1, client.tm_start_service1, client.tm_end_service1, 
             client.tm_arrival_queue2, client.tm_start_service2, client.tm_end_service2);

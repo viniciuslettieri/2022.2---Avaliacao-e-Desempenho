@@ -1,18 +1,22 @@
 testeIndividual:
 	g++ -o simulador.o simulador.cpp
-	./simulador.o 0 1 1 0.5 1 1 0 > ../Simulacoes/teste_individual.csv
+	./simulador.o 101 1 1 0.5 1 1 0 > ../Simulacoes/teste_individual.csv
 
 testePrioridade:
 	g++ -o simulador.o simulador.cpp
-	./simulador.o 0 1 7 0.5 3 1 0 > ../Simulacoes/teste_prioridade.csv
+	./simulador.o 101 1 7 0.5 3 1 0 > ../Simulacoes/teste_prioridade.csv
 
 testeRetry:
 	g++ -o simulador.o simulador.cpp
-	./simulador.o 0 100000 100000 0.5 3 1 0 > ../Simulacoes/teste_retry.csv
+	./simulador.o 101 100000 100000 0.5 3 1 0 > ../Simulacoes/teste_retry.csv
 
 testeLongo:
 	g++ -o simulador.o simulador.cpp
-	./simulador.o 0 1 1 0.5 10000 10 0 > ../Simulacoes/teste_longo.csv
+	./simulador.o 2 42 42 0.5 10000 10 0
+
+testeLongoGrafico:
+	g++ -o simulador.o simulador.cpp
+	./simulador.o 101 42 42 0.5 10000 10 0 > ../Simulacoes/teste_longo.csv
 
 testeDebug:
 	g++ -o simulador.o simulador.cpp
@@ -28,7 +32,7 @@ testeDebug_04_15000_5000:
 
 testeDebug_04_15000_5000_graphic:
 	g++ -o simulador.o simulador.cpp
-	./simulador.o 0 42 42 0.4 5000 3 -1 > ../Simulacoes/debug_04_15000_5000.csv
+	./simulador.o 101 42 42 0.4 5000 3 -1 > ../Simulacoes/debug_04_15000_5000.csv
 
 testeDebug_05_1000000_10000:
 	g++ -o simulador.o simulador.cpp
@@ -44,7 +48,7 @@ testeAleatorio_05_10000_10_1000:
 
 testeDebugAleatorio:
 	g++ -o simulador.o simulador.cpp
-	./simulador.o 0 -1 -1 0.5 10 5 -1 > ../Simulacoes/debug_aleatorio.csv
+	./simulador.o 101 -1 -1 0.5 10 5 -1 > ../Simulacoes/debug_aleatorio.csv
 
 validacaoMetricasTransiente:
 	g++ -o simulador.o simulador.cpp
@@ -69,3 +73,11 @@ validacaoDeterministicaSave:
 validacaoFaseTransiente:
 	g++ -o simulador_validacao_transiente.o simulador_validacao_transiente.cpp
 	./simulador_validacao_transiente.o
+
+validacaoGeradorExponencial:
+	g++ -o validacao_gerador_exponencial.o validacao_gerador_exponencial.cpp
+	./validacao_gerador_exponencial.o
+
+validacaoHandlerEstatisticas:
+	g++ -o validacao_handler_estatisticas.o validacao_handler_estatisticas.cpp
+	./validacao_handler_estatisticas.o

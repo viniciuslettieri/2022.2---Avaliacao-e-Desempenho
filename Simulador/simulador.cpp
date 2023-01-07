@@ -4,6 +4,22 @@
 
 using namespace std;
 
+
+int transient_table(double rho) {
+	if(rho <= 0.2) {
+		return 45000;
+	} else if(rho <= 0.4) {
+		return 20000;
+	} else if(rho <= 0.6) {
+		return 20000;
+	} else if(rho <= 0.8) {
+		return 35000;
+	} else {
+		return 60000;
+	}
+}
+
+
 int main(int argc, char* argv[]){
 	if(argc-1 != 7) {
 		printf("Foram passados %d argumentos pelo cmd.\n", argc-1);
@@ -40,7 +56,7 @@ int main(int argc, char* argv[]){
 
 	// TODO: AUTOMATIZAR A QUANTIDADE DE CLIENTES TRANSIENTES
 	if(transient_clients == -1) {
-		transient_clients = min(1000, (int) (clients_per_round * nrounds / 2));
+		transient_clients = transient_table(rho);
 	}
 
 	QueueSystem queue_system(clients_per_round, transient_clients, debug);
@@ -62,6 +78,7 @@ int main(int argc, char* argv[]){
 	int clients = nrounds * clients_per_round;
 	while(queue_system.finalized.size() < clients) {
 		if(debug == DEBUG_ALL) printf("\n[Execute]");
+		
 		// Criamos apenas a proxima chegada a cada instante
 		if(queue_system.queue1.size() <= 1 && queue_system.total_clients < clients){
 			Client next_client = generate_arrival(last_arrival, arrival_generator, service_generator);
