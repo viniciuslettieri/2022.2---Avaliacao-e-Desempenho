@@ -60,11 +60,12 @@ class StatisticsHandler {
     public:
 
     std::vector<long double> rounds_W1, rounds_W2, rounds_T1, rounds_T2, rounds_X1, rounds_X2, rounds_Nq1, rounds_Nq2, rounds_N1, rounds_N2;
-    long double AvgW1, AvgW2, AvgT1, AvgT2, AvgX1, AvgX2, AvgNq1, AvgNq2, AvgN1, AvgN2;
-    long double VarW1, VarW2, VarT1, VarT2, VarX1, VarX2, VarNq1, VarNq2, VarN1, VarN2;
-    long double DevW1, DevW2, DevT1, DevT2, DevX1, DevX2, DevNq1, DevNq2, DevN1, DevN2;
-    long double IntConfW1, IntConfW2, IntConfT1, IntConfT2, IntConfX1, IntConfX2, IntConfNq1, IntConfNq2, IntConfN1, IntConfN2;
-    long double PrecisionW1, PrecisionW2, PrecisionT1, PrecisionT2, PrecisionX1, PrecisionX2, PrecisionNq1, PrecisionNq2, PrecisionN1, PrecisionN2;
+    std::vector<long double> rounds_VarW1, rounds_VarW2;
+    long double AvgW1, AvgW2, AvgVarW1, AvgVarW2, AvgT1, AvgT2, AvgX1, AvgX2, AvgNq1, AvgNq2, AvgN1, AvgN2;
+    long double VarW1, VarW2, VarVarW1, VarVarW2, VarT1, VarT2, VarX1, VarX2, VarNq1, VarNq2, VarN1, VarN2;
+    long double DevW1, DevW2, DevVarW1, DevVarW2, DevT1, DevT2, DevX1, DevX2, DevNq1, DevNq2, DevN1, DevN2;
+    long double IntConfW1, IntConfW2, IntConfVarW1, IntConfVarW2, IntConfT1, IntConfT2, IntConfX1, IntConfX2, IntConfNq1, IntConfNq2, IntConfN1, IntConfN2;
+    long double PrecisionW1, PrecisionW2, PrecisionVarW1, PrecisionVarW2, PrecisionT1, PrecisionT2, PrecisionX1, PrecisionX2, PrecisionNq1, PrecisionNq2, PrecisionN1, PrecisionN2;
 
     StatisticsHandler(int debug = 0, bool transient_mode = false) {
         this->debug = debug;
@@ -234,12 +235,22 @@ class StatisticsHandler {
 
         // Salva o Agregado do Round
         for(int i=0; i<tot_rounds; i++){
-            this->rounds_W1.push_back(W1[i].size() == 0 ? 0.0 : accumulate(W1[i].begin(), W1[i].end(), 0.0) / W1[i].size());
-            this->rounds_W2.push_back(W2[i].size() == 0 ? 0.0 : accumulate(W2[i].begin(), W2[i].end(), 0.0) / W2[i].size());
-            this->rounds_X1.push_back(X1[i].size() == 0 ? 0.0 : accumulate(X1[i].begin(), X1[i].end(), 0.0) / X1[i].size());
-            this->rounds_X2.push_back(X2[i].size() == 0 ? 0.0 : accumulate(X2[i].begin(), X2[i].end(), 0.0) / X2[i].size());
-            this->rounds_T1.push_back(T1[i].size() == 0 ? 0.0 : accumulate(T1[i].begin(), T1[i].end(), 0.0) / T1[i].size());
-            this->rounds_T2.push_back(T2[i].size() == 0 ? 0.0 : accumulate(T2[i].begin(), T2[i].end(), 0.0) / T2[i].size());
+            double long _w1avg = W1[i].size() == 0 ? 0.0 : vector_avg(W1[i]);
+            double long _w2avg = W1[i].size() == 0 ? 0.0 : vector_avg(W2[i]);
+            double long _w1var = vector_variance(W1[0], _w1avg);
+            double long _w2var = vector_variance(W2[0], _w2avg);
+            
+            printf("[[%Lf %Lf %Lf %Lf]]", _w1avg, _w2avg, _w1var, _w2var);
+
+            this->rounds_W1.push_back(_w1avg);
+            this->rounds_W2.push_back(_w2avg);
+            this->rounds_VarW1.push_back(_w1var);
+            this->rounds_VarW2.push_back(_w2var);
+
+            this->rounds_X1.push_back(X1[i].size() == 0 ? 0.0 : vector_avg(X1[i]));
+            this->rounds_X2.push_back(X2[i].size() == 0 ? 0.0 : vector_avg(X2[i]));
+            this->rounds_T1.push_back(T1[i].size() == 0 ? 0.0 : vector_avg(T1[i]));
+            this->rounds_T2.push_back(T2[i].size() == 0 ? 0.0 : vector_avg(T2[i]));
             
             if(this->debug == DEBUG_ALL || this->debug == DEBUG_IMPORTANT){
                 printf("\nTime Metrics [round %d]: AvgW1 %.3Lf, AvgX1 %.3Lf, AvgT1 %.3Lf, AvgW2 %.3Lf, AvgX2 %.3Lf, AvgT2 %.3Lf", 
@@ -259,6 +270,8 @@ class StatisticsHandler {
         AvgN2 = vector_avg(rounds_N2);
         AvgW1 = vector_avg(rounds_W1);
         AvgW2 = vector_avg(rounds_W2);
+        AvgVarW1 = vector_avg(rounds_VarW1);
+        AvgVarW2 = vector_avg(rounds_VarW2);
         AvgX1 = vector_avg(rounds_X1);
         AvgX2 = vector_avg(rounds_X2);
         AvgT1 = vector_avg(rounds_T1);
@@ -272,6 +285,8 @@ class StatisticsHandler {
         VarN2 = vector_variance(rounds_N2, AvgN2);
         VarW1 = vector_variance(rounds_W1, AvgW1);
         VarW2 = vector_variance(rounds_W2, AvgW2);
+        VarVarW1 = vector_variance(rounds_VarW1, AvgVarW1);
+        VarVarW2 = vector_variance(rounds_VarW2, AvgVarW2);
         VarX1 = vector_variance(rounds_X1, AvgX1);
         VarX2 = vector_variance(rounds_X2, AvgX2);
         VarT1 = vector_variance(rounds_T1, AvgT1);
@@ -285,6 +300,8 @@ class StatisticsHandler {
         DevN2 = sqrt(VarN2);
         DevW1 = sqrt(VarW1);
         DevW2 = sqrt(VarW2);
+        DevVarW1 = sqrt(VarVarW1);
+        DevVarW2 = sqrt(VarVarW2);
         DevX1 = sqrt(VarX1);
         DevX2 = sqrt(VarX2);
         DevT1 = sqrt(VarT1);
@@ -302,6 +319,8 @@ class StatisticsHandler {
         IntConfX2 = 1.96 * DevX2 / sqrt(rounds_X2.size());
         IntConfT1 = 1.96 * DevT1 / sqrt(rounds_T1.size());
         IntConfT2 = 1.96 * DevT2 / sqrt(rounds_T2.size());
+        IntConfVarW1 = 1.96 * DevVarW1 / sqrt(rounds_VarW1.size());
+        IntConfVarW2 = 1.96 * DevVarW2 / sqrt(rounds_VarW2.size());
 
         // Precisao: 
 
@@ -311,6 +330,8 @@ class StatisticsHandler {
         PrecisionN2 = IntConfN2 / AvgN2;
         PrecisionW1 = IntConfW1 / AvgW1;
         PrecisionW2 = IntConfW2 / AvgW2;
+        PrecisionVarW1 = IntConfVarW1 / AvgVarW1;
+        PrecisionVarW2 = IntConfVarW2 / AvgVarW2;
         PrecisionX1 = IntConfX1 / AvgX1;
         PrecisionX2 = IntConfX2 / AvgX2;
         PrecisionT1 = IntConfT1 / AvgT1;
@@ -338,12 +359,13 @@ class StatisticsHandler {
                 rounds_W1.size(), rounds_W2.size(), rounds_X1.size(), rounds_X2.size(), rounds_T1.size(), rounds_T2.size()
             );
          
-            printf("round,Nq1,Nq2,N1,N2,W1,W2,X1,X2,T1,T2\n");
+            printf("round,Nq1,Nq2,N1,N2,W1,W2,VarW1,VarW2,X1,X2,T1,T2\n");
             for(int i=0; i<rounds_N1.size(); i++) {
                 printf(
-                    "%d, %.3Lf, %.3Lf, %.3Lf, %.3Lf, %.3Lf, %.3Lf, %.3Lf, %.3Lf, %.3Lf, %.3Lf\n",
+                    "%d, %.3Lf, %.3Lf, %.3Lf, %.3Lf, %.3Lf, %.3Lf, %.3Lf, %.3Lf, %.3Lf, %.3Lf, %.3Lf, %.3Lf\n",
                     i+1, rounds_Nq1[i], rounds_Nq2[i], rounds_N1[i], rounds_N2[i],
-                    rounds_W1[i], rounds_W2[i], rounds_X1[i], rounds_X2[i], rounds_T1[i], rounds_T2[i]
+                    rounds_W1[i], rounds_W2[i], rounds_VarW1[i], rounds_VarW2[i],
+                    rounds_X1[i], rounds_X2[i], rounds_T1[i], rounds_T2[i]
                 );
             }
         }

@@ -240,7 +240,8 @@ class QueueSystem {
         long double ExpectedAvgNq2 = lambda_arrival * ExpectedAvgW2;
         
         if(this->debug == DEBUG_ALL || this->debug == DEBUG_IMPORTANT || this->debug == DEBUG_FINAL_STATS){
-            printf("\n\nEstatisticas Finais: [rho1 = %.3Lf, rho2 = %.3Lf]\n", rho1, rho2);
+            printf("\n\nEstatisticas Finais: [lambda arrival %.3f, lambda service %.3f, rho1 = %.3Lf, rho2 = %.3Lf]\n", 
+                lambda_arrival, lambda_service, rho1, rho2);
 
             print_metric(
                 "Nq1", ExpectedAvgNq1,
@@ -277,6 +278,18 @@ class QueueSystem {
                 statistics_handler.AvgW2 - statistics_handler.IntConfW2,
                 statistics_handler.AvgW2 + statistics_handler.IntConfW2,
                 statistics_handler.PrecisionW2
+            );
+            print_metric(
+                "VarW1", -10000,
+                statistics_handler.AvgVarW1 - statistics_handler.IntConfVarW1,
+                statistics_handler.AvgVarW1 + statistics_handler.IntConfVarW1,
+                statistics_handler.PrecisionVarW1
+            );
+            print_metric(
+                "VarW2", -10000,
+                statistics_handler.AvgVarW2 - statistics_handler.IntConfVarW2,
+                statistics_handler.AvgVarW2 + statistics_handler.IntConfVarW2,
+                statistics_handler.PrecisionVarW2
             );
             print_metric(
                 "X1", ExpectedAvgX1,
