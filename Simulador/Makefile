@@ -81,3 +81,19 @@ validacaoGeradorExponencial:
 validacaoHandlerEstatisticas:
 	g++ -o validacao_handler_estatisticas.o validacao_handler_estatisticas.cpp
 	./validacao_handler_estatisticas.o
+
+simulacao1a:
+	g++ -o simulador.o simulador.cpp
+	./simulador.o 100 42 42 0.2 100 100 -1
+
+simulacao1b:
+	g++ -o simulador.o simulador.cpp
+	./simulador.o 100 42 42 0.2 500 100 -1
+
+simulacao1c:
+	g++ -o simulador.o simulador.cpp
+	./simulador.o 100 42 42 0.2 600 100 -1
+
+simulacao3a:
+	g++ -o simulador.o simulador.cpp
+	./simulador.o 100 42 42 0.2 1000 100 -1

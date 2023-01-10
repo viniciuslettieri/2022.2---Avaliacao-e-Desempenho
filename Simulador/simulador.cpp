@@ -1,5 +1,6 @@
 #include <vector>
 #include <sstream>
+#include <time.h>
 #include "queue_system.cpp"
 
 using namespace std;
@@ -63,6 +64,10 @@ int main(int argc, char* argv[]){
 	double lambda_arrival = rho / 2.0;
 	double lambda_service = 1.0;
 
+	if(debug == DEBUG_ALL || debug == DEBUG_IMPORTANT) {
+		printf("\nTransient Clients %d\n", transient_clients);
+	}
+
 	QueueSystem queue_system(clients_per_round, transient_clients, lambda_arrival, lambda_service, debug);
 
 	ExponentialGenerator arrival_generator(lambda_arrival);
@@ -74,6 +79,10 @@ int main(int argc, char* argv[]){
 	if(service_seed != -1)
 		service_generator.set_deterministic_seed(service_seed);	
 	
+	clock_t start, end;
+    double cpu_time_used;
+	start = clock();
+
 	// Executamos o simulador ate que todos os clientes tenham sido criados e finalizados
 	long long int total_arrivals = 0;
 	int clients = nrounds * clients_per_round;
@@ -99,12 +108,17 @@ int main(int argc, char* argv[]){
 
 	queue_system.finish();
 
+	end = clock();
+    cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+
 	if(debug == DEBUG_CLIENTS || debug == DEBUG_ALL) {
 		printf("identifier,tm_arrival,tm_service1,tm_service2,tm_arrival_queue1,tm_start_service1,tm_end_service1,tm_arrival_queue2,tm_start_service2,tm_end_service2\n");
 		for(auto client: queue_system.finalized) {
 			print_client(client);
 		}
 	}
+
+	printf("\nExecutado em %f segundos!\n", cpu_time_used);
 
     return 0;
 }

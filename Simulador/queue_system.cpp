@@ -238,6 +238,9 @@ class QueueSystem {
         long double ExpectedAvgN2 = lambda_arrival * ExpectedAvgT2;
         long double ExpectedAvgNq1 = lambda_arrival * ExpectedAvgW1;
         long double ExpectedAvgNq2 = lambda_arrival * ExpectedAvgW2;
+
+        long double ExpectedVarW1 = (pow(rho1, 2) / pow(1-rho1, 2)) + (2*rho1 / (1-rho1));
+        long double ExpectedVarW2 = (pow(rho2, 2) / pow(1-rho2, 2)) + (2*rho2 / (1-rho2));
         
         if(this->debug == DEBUG_ALL || this->debug == DEBUG_IMPORTANT || this->debug == DEBUG_FINAL_STATS){
             printf("\n\nEstatisticas Finais: [lambda arrival %.3f, lambda service %.3f, rho1 = %.3Lf, rho2 = %.3Lf]\n", 
@@ -245,76 +248,66 @@ class QueueSystem {
 
             print_metric(
                 "Nq1", ExpectedAvgNq1,
-                statistics_handler.AvgNq1 - statistics_handler.IntConfNq1,
-                statistics_handler.AvgNq1 + statistics_handler.IntConfNq1,
+                statistics_handler.AvgNq1, statistics_handler.IntConfNq1,
                 statistics_handler.PrecisionNq1
             );
             print_metric(
                 "Nq2", ExpectedAvgNq2,
-                statistics_handler.AvgNq2 - statistics_handler.IntConfNq2,
-                statistics_handler.AvgNq2 + statistics_handler.IntConfNq2,
+                statistics_handler.AvgNq2, statistics_handler.IntConfNq2,
                 statistics_handler.PrecisionNq2
             );
             print_metric(
                 "N1", ExpectedAvgN1,
-                statistics_handler.AvgN1 - statistics_handler.IntConfN1,
-                statistics_handler.AvgN1 + statistics_handler.IntConfN1,
+                statistics_handler.AvgN1, statistics_handler.IntConfN1,
                 statistics_handler.PrecisionN1
             );
             print_metric(
                 "N2", ExpectedAvgN2,
-                statistics_handler.AvgN2 - statistics_handler.IntConfN2,
-                statistics_handler.AvgN2 + statistics_handler.IntConfN2,
+                statistics_handler.AvgN2, statistics_handler.IntConfN2,
                 statistics_handler.PrecisionN2
             );
             print_metric(
                 "W1", ExpectedAvgW1,
-                statistics_handler.AvgW1 - statistics_handler.IntConfW1,
-                statistics_handler.AvgW1 + statistics_handler.IntConfW1,
+                statistics_handler.AvgW1, statistics_handler.IntConfW1,
                 statistics_handler.PrecisionW1
             );
             print_metric(
                 "W2", ExpectedAvgW2,
-                statistics_handler.AvgW2 - statistics_handler.IntConfW2,
-                statistics_handler.AvgW2 + statistics_handler.IntConfW2,
+                statistics_handler.AvgW2, statistics_handler.IntConfW2,
                 statistics_handler.PrecisionW2
             );
             print_metric(
-                "VarW1", -10000,
-                statistics_handler.AvgVarW1 - statistics_handler.IntConfVarW1,
-                statistics_handler.AvgVarW1 + statistics_handler.IntConfVarW1,
+                "VarW1", ExpectedVarW1,
+                statistics_handler.AvgVarW1, statistics_handler.IntConfVarW1,
                 statistics_handler.PrecisionVarW1
             );
             print_metric(
-                "VarW2", -10000,
-                statistics_handler.AvgVarW2 - statistics_handler.IntConfVarW2,
-                statistics_handler.AvgVarW2 + statistics_handler.IntConfVarW2,
+                "VarW2", -1,
+                statistics_handler.AvgVarW2, statistics_handler.IntConfVarW2,
                 statistics_handler.PrecisionVarW2
             );
             print_metric(
                 "X1", ExpectedAvgX1,
-                statistics_handler.AvgX1 - statistics_handler.IntConfX1,
-                statistics_handler.AvgX1 + statistics_handler.IntConfX1,
+                statistics_handler.AvgX1, statistics_handler.IntConfX1,
                 statistics_handler.PrecisionX1
             );
             print_metric(
                 "X2", ExpectedAvgX2,
-                statistics_handler.AvgX2 - statistics_handler.IntConfX2,
-                statistics_handler.AvgX2 + statistics_handler.IntConfX2,
+                statistics_handler.AvgX2, statistics_handler.IntConfX2,
                 statistics_handler.PrecisionX2
             );
             print_metric(
                 "T1", ExpectedAvgT1,
-                statistics_handler.AvgT1 - statistics_handler.IntConfT1,
-                statistics_handler.AvgT1 + statistics_handler.IntConfT1,
+                statistics_handler.AvgT1, statistics_handler.IntConfT1,
                 statistics_handler.PrecisionT1
             );
             print_metric(
                 "T2", ExpectedAvgT2,
-                statistics_handler.AvgT2 - statistics_handler.IntConfT2,
-                statistics_handler.AvgT2 + statistics_handler.IntConfT2,
+                statistics_handler.AvgT2, statistics_handler.IntConfT2,
                 statistics_handler.PrecisionT2
             );
+
+            printf("\n*Obs: Não foi possivel fazer o IC com ChiSquared pelo C++.\nPara fazer no Python basta utilizar os valores da Média da VarW1 na fórmula (n-1)*AvgVarW1/inv_chi2(alpha=0.05, degree=n-1)\n");
         }
     }
 };

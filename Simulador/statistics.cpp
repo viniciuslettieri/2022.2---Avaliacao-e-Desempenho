@@ -11,16 +11,17 @@
 
 
 // Utils 
-void print_metric(std::string metric_name, long double expected, long double ic_lower, long double ic_upper, long double precision) {
+void print_metric(std::string metric_name, long double expected, long double avg, long double half_ic, long double precision) {
     printf(
-        "%s:\tEsperado [%.3Lf]\tIC: [%.3Lf - %.3Lf] com precisao %.3Lf\t\t%s\t%s\n", 
+        "%s:\tEsperado [%.3Lf]\tIC: [ %8.3Lf | %8.3Lf | %8.3Lf ]\t com precisao %.3Lf\t\t%s\t%s\n", 
         metric_name.c_str(),
         expected,
-        ic_lower,
-        ic_upper,
+        avg - half_ic,
+        avg,
+        avg + half_ic,
         precision,
         precision < 0.05 ? "(Precisão Ok)" : "             ",
-        expected >= ic_lower && expected <= ic_upper ? "(Dentro do IC)" : "             "
+        expected >= avg - half_ic && expected <= avg + half_ic ? "(Dentro do IC)" : "             "
     );
 }
 
@@ -236,12 +237,10 @@ class StatisticsHandler {
         // Salva o Agregado do Round
         for(int i=0; i<tot_rounds; i++){
             double long _w1avg = W1[i].size() == 0 ? 0.0 : vector_avg(W1[i]);
-            double long _w2avg = W1[i].size() == 0 ? 0.0 : vector_avg(W2[i]);
-            double long _w1var = vector_variance(W1[0], _w1avg);
-            double long _w2var = vector_variance(W2[0], _w2avg);
+            double long _w2avg = W2[i].size() == 0 ? 0.0 : vector_avg(W2[i]);
+            double long _w1var = vector_variance(W1[i], _w1avg);
+            double long _w2var = vector_variance(W2[i], _w2avg);
             
-            printf("[[%Lf %Lf %Lf %Lf]]", _w1avg, _w2avg, _w1var, _w2var);
-
             this->rounds_W1.push_back(_w1avg);
             this->rounds_W2.push_back(_w2avg);
             this->rounds_VarW1.push_back(_w1var);
@@ -359,13 +358,13 @@ class StatisticsHandler {
                 rounds_W1.size(), rounds_W2.size(), rounds_X1.size(), rounds_X2.size(), rounds_T1.size(), rounds_T2.size()
             );
          
-            printf("round,Nq1,Nq2,N1,N2,W1,W2,VarW1,VarW2,X1,X2,T1,T2\n");
+            printf("round,Nq1,Nq2,N1,N2,W1,W2,X1,X2,T1,T2,VarW1,VarW2\n");
             for(int i=0; i<rounds_N1.size(); i++) {
                 printf(
                     "%d, %.3Lf, %.3Lf, %.3Lf, %.3Lf, %.3Lf, %.3Lf, %.3Lf, %.3Lf, %.3Lf, %.3Lf, %.3Lf, %.3Lf\n",
                     i+1, rounds_Nq1[i], rounds_Nq2[i], rounds_N1[i], rounds_N2[i],
-                    rounds_W1[i], rounds_W2[i], rounds_VarW1[i], rounds_VarW2[i],
-                    rounds_X1[i], rounds_X2[i], rounds_T1[i], rounds_T2[i]
+                    rounds_W1[i], rounds_W2[i], rounds_X1[i], rounds_X2[i], rounds_T1[i], rounds_T2[i],
+                    rounds_VarW1[i], rounds_VarW2[i]
                 );
             }
         }
