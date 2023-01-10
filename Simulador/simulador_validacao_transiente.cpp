@@ -32,29 +32,28 @@ bool valida_ic(QueueSystem &queue_system) {
 
 
 int main(int argc, char* argv[]){
-	int debug = DEBUG_IMPORTANT;    
-    // int debug = NO_DEBUG;    
+	// int debug = DEBUG_IMPORTANT;    
+    int debug = NO_DEBUG;    
 
-    // vector<double> rho_list = {0.2, 0.4, 0.6, 0.8, 0.9};
-    vector<double> rho_list = {0.1};
+    vector<double> rho_list = {0.2, 0.4, 0.6, 0.8, 0.9};
+    // vector<double> rho_list = {0.5};
     
     int clients_per_round = 1;
     int transient_clients = 100;
 
     for(auto rho: rho_list) {
-        for(int nrounds = 30000; nrounds <= 30000; nrounds += 1000) {
-        // for(int nrounds = 1000; nrounds <= 100000; nrounds += 1000) {
+        // for(int nrounds = 30000; nrounds <= 30000; nrounds += 1000) {
+        for(int nrounds = 1000; nrounds <= 100000; nrounds += 1000) {
 
             long double last_arrival = 0.0;
             double lambda_arrival = rho / 2.0;
-            double lambda_arrival = 1.0;
+            double lambda_service = 1.0;
 
             // A forma que simulamos a fase transiente é atraves de uma simulacao com 1 cliente para K rounds
             // onde K é a quantidade de 'clientes transientes'.
 
             QueueSystem queue_system(clients_per_round, transient_clients, lambda_arrival, lambda_service, debug, false);
 
-            
             ExponentialGenerator arrival_generator(lambda_arrival);
             ExponentialGenerator service_generator(lambda_service);
 
@@ -80,14 +79,6 @@ int main(int argc, char* argv[]){
             }
 
             queue_system.finish();
-
-            // if(valida_ic(queue_system)) {
-            //     printf("Rho %f, Total Transient Clients Simulated %10d: ok\n", rho, clients);
-            //     break;
-            // }
-            // else{
-            //     printf("Rho %f, Total Transient Clients Simulated %10d\n", rho, clients);
-            // }
         }
     }
 

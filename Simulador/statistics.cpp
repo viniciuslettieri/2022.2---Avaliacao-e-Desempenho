@@ -351,7 +351,7 @@ class StatisticsHandler {
     }
 
     void print_statistics_by_round() {
-        if(this->debug == DEBUG_ALL || this->debug == DEBUG_IMPORTANT) {
+        if(this->debug == DEBUG_ALL || this->debug == DEBUG_IMPORTANT || this->debug == DEBUG_STATS) {
             printf(
                 "\n\nTotal de Rounds: Nq1 %lu, Nq2 %lu, N1 %lu, N2 %lu, W1 %lu, W2 %lu, X1 %lu, X2 %lu, T1 %lu, T2 %lu\n\n",
                 rounds_Nq1.size(), rounds_Nq2.size(), rounds_N1.size(), rounds_N2.size(),
