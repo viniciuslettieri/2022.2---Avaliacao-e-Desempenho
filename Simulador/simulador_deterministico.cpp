@@ -63,9 +63,9 @@ QueueSystem set_interruption_test(int &clients_per_round, int &nrounds, int &tra
 int main(){
 	int clients_per_round, nrounds, transient_clients, debug;
 
-	// QueueSystem queue_system = set_flow_test(clients_per_round, nrounds, transient_clients, debug);
+	QueueSystem queue_system = set_flow_test(clients_per_round, nrounds, transient_clients, debug);
 	// QueueSystem queue_system = set_priority_test(clients_per_round, nrounds, transient_clients, debug);
-	QueueSystem queue_system = set_interruption_test(clients_per_round, nrounds, transient_clients, debug);
+	// QueueSystem queue_system = set_interruption_test(clients_per_round, nrounds, transient_clients, debug);
 	
 	// Executamos o simulador
 	long long int total_arrivals = 0;

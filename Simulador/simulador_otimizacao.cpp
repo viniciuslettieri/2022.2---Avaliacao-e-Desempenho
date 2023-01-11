@@ -1,22 +1,13 @@
 #include <vector>
 #include <sstream>
+#include <time.h>
 #include "queue_system.cpp"
 
 using namespace std;
 
 
-bool valida_ic(QueueSystem &queue_system) {
+bool valida_precision(QueueSystem &queue_system) {
     return (
-        2*queue_system.statistics_handler.IntConfNq1 < 0.10 * queue_system.statistics_handler.AvgNq1 &&
-        2*queue_system.statistics_handler.IntConfNq2 < 0.10 * queue_system.statistics_handler.AvgNq2 &&
-        2*queue_system.statistics_handler.IntConfN1 < 0.10 * queue_system.statistics_handler.AvgN1 &&
-        2*queue_system.statistics_handler.IntConfN2 < 0.10 * queue_system.statistics_handler.AvgN2 &&
-        2*queue_system.statistics_handler.IntConfW1 < 0.10 * queue_system.statistics_handler.AvgW1 &&
-        2*queue_system.statistics_handler.IntConfW2 < 0.10 * queue_system.statistics_handler.AvgW2 &&
-        2*queue_system.statistics_handler.IntConfX1 < 0.10 * queue_system.statistics_handler.AvgX1 &&
-        2*queue_system.statistics_handler.IntConfX2 < 0.10 * queue_system.statistics_handler.AvgX2 &&
-        2*queue_system.statistics_handler.IntConfT1 < 0.10 * queue_system.statistics_handler.AvgT1 &&
-        2*queue_system.statistics_handler.IntConfT2 < 0.10 * queue_system.statistics_handler.AvgT2 &&
         queue_system.statistics_handler.PrecisionNq1 < 0.05 &&
         queue_system.statistics_handler.PrecisionNq2 < 0.05 &&
         queue_system.statistics_handler.PrecisionN1 < 0.05 &&
@@ -37,15 +28,15 @@ int main(int argc, char* argv[]){
 	// int debug = DEBUG_IMPORTANT;    
     int debug = NO_DEBUG;    
 
-    vector<double> rho_list = {0.2, 0.4, 0.6, 0.8, 0.9};
-    // vector<double> rho_list = {0.5};
-    
-    int clients_per_round = 1;
-    int transient_clients = 100;
+    double rho = 0.6;    
+    int transient_clients = 20000; // pela tabela, a partir do rho = 0.6
 
-    for(auto rho: rho_list) {
-        // for(int nrounds = 30000; nrounds <= 30000; nrounds += 1000) {
-        for(int nrounds = 1000; nrounds <= 100000; nrounds += 1000) {
+    printf("clients,rounds,precision_ok,factor,tempo\n");
+
+    for(int clients_per_round = 100; clients_per_round <= 10000; clients_per_round += 100) {
+        for(int nrounds = 100; nrounds <= 10000; nrounds += 100) {
+
+            if(clients_per_round * nrounds >= 300000) continue;
 
             long double last_arrival = 0.0;
             double lambda_arrival = rho / 2.0;
@@ -58,6 +49,10 @@ int main(int argc, char* argv[]){
 
             ExponentialGenerator arrival_generator(lambda_arrival);
             ExponentialGenerator service_generator(lambda_service);
+
+            clock_t start, end;
+            double cpu_time_used;
+            start = clock();
 
             // Executamos o simulador ate que todos os clientes tenham sido criados e finalizados
             long long int total_arrivals = 0;
@@ -81,6 +76,13 @@ int main(int argc, char* argv[]){
             }
 
             queue_system.finish();
+            
+            end = clock();
+            cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+            
+            string precisao_ok = valida_precision(queue_system) ? "Ok" : "Nao Ok";
+
+            printf("%d,%d,%s,%d,%.4f\n",clients_per_round, nrounds, precisao_ok.c_str(), clients_per_round*nrounds+transient_clients, cpu_time_used);
         }
     }
 

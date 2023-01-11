@@ -43,8 +43,8 @@ QueueSystem two_round_overlay(int &clients_per_round, int &nrounds, int &transie
 int main(){
 	int clients_per_round, nrounds, transient_clients, debug;
 
-	// QueueSystem queue_system = two_round(clients_per_round, nrounds, transient_clients, debug);
-    QueueSystem queue_system = two_round_overlay(clients_per_round, nrounds, transient_clients, debug);
+	QueueSystem queue_system = two_round(clients_per_round, nrounds, transient_clients, debug);
+    // QueueSystem queue_system = two_round_overlay(clients_per_round, nrounds, transient_clients, debug);
 
 	// Executamos o simulador
 	long long int total_arrivals = 0;
