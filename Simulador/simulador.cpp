@@ -55,7 +55,7 @@ int main(int argc, char* argv[]){
 			debug, arrival_seed, service_seed, rho, clients_per_round, nrounds, transient_clients);
 	}
 
-	// TODO: AUTOMATIZAR A QUANTIDADE DE CLIENTES TRANSIENTES
+	// quantidade de transientes padrao da tabela
 	if(transient_clients == -1) {
 		transient_clients = transient_table(rho);
 	}
